@@ -52,7 +52,25 @@ const getParcelsBySender = async (senderId: string) => {
     return parcel; 
 };
 
+
+// Get all parcels send by a User (i.e., User = SENDER)
+
+const getParcelsForReceiver = async (receiverEmail: string) => {  
+    // Checking is receiver blocked
+    const receiver = await User.findOne({email: receiverEmail});
+    if (!receiver) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Receiver not found");   
+    }
+    if (receiver?.status === 'Blocked') {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Receiver is blocked");   
+    }
+
+    const parcel = await Parcel.find({receiverEmail});
+    return parcel; 
+};
+
 export const senderServices = {
     sendParcel,
-    getParcelsBySender
+    getParcelsBySender,
+    getParcelsForReceiver
 }

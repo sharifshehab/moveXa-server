@@ -30,10 +30,22 @@ const getParcelsBySender = catchAsync(async (req: Request, res: Response) => {
 });
 
 
+// Get all parcels for a receiver 
+const getParcelsForReceiver = catchAsync(async (req: Request, res: Response) => {
+    const { receiverEmail } = req.params;
+    const parcel = await senderServices.getParcelsForReceiver(receiverEmail);  
+
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.CREATED,     
+        message: "Parcel Data Retrieved Successfully",
+        data: parcel,
+    })
+});
+
+
 export const senderController = {
     sendParcel,
     getParcelsBySender,
-//   getUserById,
-//   updateUser,
-//   deleteUser
+    getParcelsForReceiver
 };
