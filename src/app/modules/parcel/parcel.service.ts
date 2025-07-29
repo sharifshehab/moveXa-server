@@ -6,7 +6,8 @@ import { User } from "../user/user.model";
 import { generateTrackingId } from "../../utils/generateTrackingId";
 import { feeCalculator } from "../../utils/feeCalculator";
 
-const sendParcelService = async (payload: Partial<IParcel> & { insideDhaka: boolean}) => {  
+// Send parcel to a User (i.e., User = RECEIVER)
+const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean}) => {  
     const { senderID,receiverEmail, weight, insideDhaka } = payload;
 
     // Checking is user blocked
@@ -28,14 +29,30 @@ const sendParcelService = async (payload: Partial<IParcel> & { insideDhaka: bool
 
     // Generate tracking_Id
     const trackingID = generateTrackingId();
-    // Calculate fee
+    // Calculate parcel fee
     const fee = feeCalculator(weight as number, insideDhaka);
 
     const parcel = await Parcel.create({...payload, fee, trackingID});
     return parcel;
 };
 
-export const senderServices = {
-    sendParcelService,
 
+// Get all parcels send by a User (i.e., User = SENDER)
+const getParcelsBySender = async (senderId: string) => {  
+    // Checking is user blocked
+    const user = await User.findById(senderId);
+    if (!user) {
+        throw new AppError(StatusCodes.NOT_FOUND, "User not found");   
+    }
+    if (user?.status === 'Blocked') {
+        throw new AppError(StatusCodes.BAD_REQUEST, "User is blocked");   
+    }
+
+    const parcel = await Parcel.find({senderID: senderId});
+    return parcel; 
+};
+
+export const senderServices = {
+    sendParcel,
+    getParcelsBySender
 }
