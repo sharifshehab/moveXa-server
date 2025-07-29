@@ -24,7 +24,7 @@ export enum Payment {
 export interface IStatusLog {
     status: ParcelStatus;
     timestamp: Date;
-    updatedBy : Types.ObjectId;
+    updatedBy?: Types.ObjectId;
 }
 
 export interface IParcel {
