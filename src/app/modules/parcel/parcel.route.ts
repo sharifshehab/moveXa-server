@@ -9,3 +9,5 @@ parcelRoutes.post('/send-parcel', validateRequest(sendParcelZodSchema), userCont
 parcelRoutes.get('/sender-parcels/:senderId',  userController.getParcelsBySender);
 parcelRoutes.get('/receiver-parcels/:receiverEmail',  userController.getReceiverParcels);
 parcelRoutes.patch('/cancel-parcel/:parcelId',  userController.cancelParcel);
+parcelRoutes.patch('/receive-parcel/:parcelId',  userController.parcelReceived);
+parcelRoutes.get('/delivery-history/:receiverEmail',  userController.getDeliveryHistory);

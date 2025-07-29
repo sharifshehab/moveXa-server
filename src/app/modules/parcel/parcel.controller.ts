@@ -60,10 +60,38 @@ const getReceiverParcels = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
+// Confirm parcel received by the user (i.e., User = RECEIVER)
+const parcelReceived = catchAsync(async (req: Request, res: Response) => {
+    const { parcelId } = req.params;
+    const parcel = await userServices.parcelReceived(parcelId);  
+
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.CREATED,     
+        message: "Parcel Received Successfully",
+        data: parcel,
+    })
+});
+
+// Parcel Delivery history
+const getDeliveryHistory = catchAsync(async (req: Request, res: Response) => {
+    const { receiverEmail } = req.params;
+    const deliveries = await userServices.getDeliveryHistory(receiverEmail);  
+
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.CREATED,     
+        message: "Parcel Delivery History Retrieved Successfully",
+        data: deliveries,
+    })
+});
+
 
 export const userController = {
     sendParcel,
     getParcelsBySender,
     cancelParcel,
-    getReceiverParcels
+    getReceiverParcels,
+    parcelReceived,
+    getDeliveryHistory
 };

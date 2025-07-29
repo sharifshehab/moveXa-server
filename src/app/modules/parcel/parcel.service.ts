@@ -66,6 +66,9 @@ const cancelParcel = async (parcelId: string) => {
     if (parcel?.isBlocked) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Parcel is blocked");   
     }
+    if (parcel?.currentStatus === "DISPATCHED") {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel already dispatched, cannot be cancelled now!");   
+    }
 
     parcel.currentStatus = ParcelStatus.CANCELLED;
     parcel.isCancelled = true;
@@ -97,9 +100,67 @@ const getReceiverParcels = async (receiverEmail: string) => {
     return parcels; 
 };
 
+// Confirm parcel received by the user (i.e., User = RECEIVER)
+const parcelReceived = async (parcelId: string) => {  
+    // Checking is parcel blocked
+    const parcel = await Parcel.findById(parcelId);
+    if (!parcel) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
+    }
+    if (parcel?.isBlocked) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel is blocked");   
+    }
+    if (parcel?.isCancelled) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel is cancelled");   
+    }
+
+    parcel.currentStatus = ParcelStatus.DELIVERED;
+    parcel.statusLog.push({
+        status: ParcelStatus.DELIVERED,
+        timestamp: new Date(),
+        updatedBy: new mongoose.Types.ObjectId("6888eae5bc449833ae074f82") // Remove this with the token user id
+    });
+    await parcel.save();
+    return parcel; 
+};
+
+// Parcel Delivery history
+const getDeliveryHistory = async (receiverEmail: string) => {  
+    const deliveries = await Parcel.aggregate([
+        {
+            $match: {receiverEmail}
+        },
+        {
+            $project: {
+                _id: 0,
+                trackingID: 1,
+                parcelSender: '$senderID',
+                parcelReceiver: '$receiverEmail',
+                sendFrom: '$senderAddress',
+                receivedFrom: '$receiverAddress',
+                weight: 1,
+                parcelType: '$type',
+                parcelFee: '$fee',
+                statusLog: {
+                    $filter: {
+                        input: "$statusLog",
+                        as: "log",
+                        cond: { $eq: ["$$log.status", "DELIVERED"]}
+                    },
+
+                }
+            }
+        },
+        {$unwind: '$statusLog'}
+    ]);
+    return deliveries; 
+};
+
 export const userServices = {
     sendParcel,
     getParcelsBySender,
     cancelParcel,
-    getReceiverParcels
+    getReceiverParcels,
+    parcelReceived,
+    getDeliveryHistory
 }
