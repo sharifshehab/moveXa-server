@@ -8,7 +8,6 @@ let server: Server;
 async function startServer() {
                     try {
                         // Connect to MongoDB Atlas using Mongoose
-
                         const uri = envVars.DB_URL
                         await mongoose.connect(uri);
                         console.log('Connected to MongoDB Atlas Using Mongoose');
