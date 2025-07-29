@@ -29,7 +29,7 @@ const sendParcelService = async (payload: Partial<IParcel> & { insideDhaka: bool
     // Generate tracking_Id
     const trackingID = generateTrackingId();
     // Calculate fee
-    const fee = feeCalculator(Number(weight), insideDhaka);
+    const fee = feeCalculator(weight as number, insideDhaka);
 
     const parcel = await Parcel.create({...payload, fee, trackingID});
     return parcel;
