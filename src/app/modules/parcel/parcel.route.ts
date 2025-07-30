@@ -1,13 +1,15 @@
 import { Router } from "express";
 import { validateRequest } from "../../../middlewares/validateRequest";
 import { sendParcelZodSchema } from "./parcel.validation";
-import { userController } from "./parcel.controller";
+import { parcelController } from "./parcel.controller";
 
 export const parcelRoutes = Router();
 
-parcelRoutes.post('/send-parcel', validateRequest(sendParcelZodSchema), userController.sendParcel);
-parcelRoutes.get('/sender-parcels/:senderId',  userController.getParcelsBySender);
-parcelRoutes.get('/receiver-parcels/:receiverEmail',  userController.getReceiverParcels);
-parcelRoutes.patch('/cancel-parcel/:parcelId',  userController.cancelParcel);
-parcelRoutes.patch('/receive-parcel/:parcelId',  userController.parcelReceived);
-parcelRoutes.get('/delivery-history/:receiverEmail',  userController.getDeliveryHistory);
+parcelRoutes.get('/all-parcels', parcelController.getAllParcels);
+parcelRoutes.post('/send-parcel', validateRequest(sendParcelZodSchema), parcelController.sendParcel);
+parcelRoutes.get('/sender-parcels/:senderId',  parcelController.getParcelsBySender);
+parcelRoutes.get('/receiver-parcels/:receiverEmail',  parcelController.getReceiverParcels);
+parcelRoutes.patch('/cancel-parcel/:parcelId', parcelController.cancelParcel);
+parcelRoutes.patch('/receive-parcel/:parcelId', parcelController.parcelReceived);
+parcelRoutes.get('/delivery-history/:receiverEmail', parcelController.getDeliveryHistory);
+parcelRoutes.patch('/parcel-status/:parcelId', parcelController.changeParcelStatus);

@@ -5,4 +5,6 @@ import { userController } from "./user.controller";
 
 export const userRoutes = Router();
 
+userRoutes.get('/all-users', userController.getAllUsers);
 userRoutes.post('/register', validateRequest(createUserZodSchema), userController.createUser);
+userRoutes.patch('/user-status/:userId', userController.changeUserStatus);

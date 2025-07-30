@@ -6,7 +6,13 @@ import { User } from "../user/user.model";
 import { generateTrackingId } from "../../utils/generateTrackingId";
 import { feeCalculator } from "../../utils/feeCalculator";
 import mongoose from "mongoose";
-import dayjs from "dayjs";
+
+
+// Get all parcels
+const getAllParcels = async () => {  
+    const parcels = await Parcel.find({});
+    return parcels;
+};
 
 /* Role = SENDER */
 // Send parcel to a User (i.e., User = RECEIVER)
@@ -128,19 +134,42 @@ const parcelReceived = async (parcelId: string) => {
 const getDeliveryHistory = async (receiverEmail: string) => {  
     const deliveries = await Parcel.aggregate([
         {
-            $match: {receiverEmail}
+            $match: {
+                receiverEmail,
+                currentStatus: "DELIVERED"
+            }
         },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'senderID',
+                foreignField: '_id',
+                as: 'senderDetails'
+            }
+        },
+        { $unwind: '$senderDetails' },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'receiverEmail',
+                foreignField: 'email',
+                as: 'receiverDetails'
+            }
+        },
+        { $unwind: '$receiverDetails' },
         {
             $project: {
                 _id: 0,
                 trackingID: 1,
-                parcelSender: '$senderID',
-                parcelReceiver: '$receiverEmail',
+                senderName: '$senderDetails.name',
+                senderEmail: '$senderDetails.email',
+                receiverName: '$receiverDetails.name',
+                receiverEmail: '$receiverDetails.email',
                 sendFrom: '$senderAddress',
                 receivedFrom: '$receiverAddress',
                 weight: 1,
                 parcelType: '$type',
-                parcelFee: '$fee',
+                deliveryFee: '$fee',
                 statusLog: {
                     $filter: {
                         input: "$statusLog",
@@ -151,16 +180,34 @@ const getDeliveryHistory = async (receiverEmail: string) => {
                 }
             }
         },
-        {$unwind: '$statusLog'}
-    ]);
+        { $unwind: '$statusLog' }
+    ])
     return deliveries; 
 };
 
-export const userServices = {
+// Change parcel status
+const changeParcelStatus = async (parcelId: string, parcelStatus: boolean) => {  
+    // Checking is parcel exist
+    const isParcelExist = await Parcel.findById(parcelId);
+    if (!isParcelExist) { 
+        throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
+    }
+    
+    if (parcelStatus === isParcelExist.isBlocked) { 
+        throw new AppError(StatusCodes.BAD_REQUEST, `Parcel status is already ${parcelStatus}`);   
+    }
+
+    const parcel = await Parcel.findByIdAndUpdate(parcelId, { isBlocked: parcelStatus}, { new: true, runValidators: true });
+    return parcel
+};
+
+export const parcelServices = {
+    getAllParcels,
     sendParcel,
     getParcelsBySender,
     cancelParcel,
     getReceiverParcels,
     parcelReceived,
-    getDeliveryHistory
+    getDeliveryHistory,
+    changeParcelStatus
 }

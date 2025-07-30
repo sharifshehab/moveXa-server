@@ -2,12 +2,23 @@ import { Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import {StatusCodes} from 'http-status-codes';
-import { userServices } from "./parcel.service";
+import { parcelServices } from "./parcel.service";
+
+// Get all parcels
+const getAllParcels = catchAsync(async (req: Request, res: Response) => {
+    const allParcels = await parcelServices.getAllParcels();  
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,     
+        message: "All Parcels Retrieved Successfully",
+        data: allParcels,
+    })
+});
 
 /* Role = SENDER */
 // Send parcel to a User (i.e., User = RECEIVER)
 const sendParcel = catchAsync(async (req: Request, res: Response) => {
-    const parcel = await userServices.sendParcel(req.body);  
+    const parcel = await parcelServices.sendParcel(req.body);  
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.CREATED,     
@@ -20,7 +31,7 @@ const sendParcel = catchAsync(async (req: Request, res: Response) => {
 // Get all parcels send by a User (i.e., User = SENDER)
 const getParcelsBySender = catchAsync(async (req: Request, res: Response) => {
     const { senderId } = req.params;
-    const parcels = await userServices.getParcelsBySender(senderId);  
+    const parcels = await parcelServices.getParcelsBySender(senderId);  
 
     sendResponse(res, {
         success: true,
@@ -34,7 +45,7 @@ const getParcelsBySender = catchAsync(async (req: Request, res: Response) => {
 // Cancel parcel 
 const cancelParcel = catchAsync(async (req: Request, res: Response) => {
     const { parcelId } = req.params;
-    const updateParcel = await userServices.cancelParcel(parcelId);  
+    const updateParcel = await parcelServices.cancelParcel(parcelId);  
 
     sendResponse(res, {
         success: true,
@@ -50,7 +61,7 @@ const cancelParcel = catchAsync(async (req: Request, res: Response) => {
 // Get all parcels received by a user (i.e., User = RECEIVER)
 const getReceiverParcels = catchAsync(async (req: Request, res: Response) => {
     const { receiverEmail } = req.params;
-    const parcels = await userServices.getReceiverParcels(receiverEmail);  
+    const parcels = await parcelServices.getReceiverParcels(receiverEmail);  
 
     sendResponse(res, {
         success: true,
@@ -63,7 +74,7 @@ const getReceiverParcels = catchAsync(async (req: Request, res: Response) => {
 // Confirm parcel received by the user (i.e., User = RECEIVER)
 const parcelReceived = catchAsync(async (req: Request, res: Response) => {
     const { parcelId } = req.params;
-    const parcel = await userServices.parcelReceived(parcelId);  
+    const parcel = await parcelServices.parcelReceived(parcelId);  
 
     sendResponse(res, {
         success: true,
@@ -76,7 +87,7 @@ const parcelReceived = catchAsync(async (req: Request, res: Response) => {
 // Parcel Delivery history
 const getDeliveryHistory = catchAsync(async (req: Request, res: Response) => {
     const { receiverEmail } = req.params;
-    const deliveries = await userServices.getDeliveryHistory(receiverEmail);  
+    const deliveries = await parcelServices.getDeliveryHistory(receiverEmail);  
 
     sendResponse(res, {
         success: true,
@@ -86,12 +97,27 @@ const getDeliveryHistory = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
+// Change parcel status
+const changeParcelStatus = catchAsync(async (req: Request, res: Response) => {
+    const { parcelId } = req.params;
+    const { parcelStatus } = req.body;
+    const user = await parcelServices.changeParcelStatus(parcelId, parcelStatus);  
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,     
+        message: "Parcel Status Changed Successfully",
+        data: user,
+    })
+});
 
-export const userController = {
+
+export const parcelController = {
+    getAllParcels,
     sendParcel,
     getParcelsBySender,
     cancelParcel,
     getReceiverParcels,
     parcelReceived,
-    getDeliveryHistory
+    getDeliveryHistory,
+    changeParcelStatus
 };
