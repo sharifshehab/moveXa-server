@@ -1,19 +1,31 @@
 import dotenv from 'dotenv';
 import express, {Application, Request, Response} from 'express'
 import cors from 'cors';
-import jwt from 'jsonwebtoken';
-import { globalErrorHandler } from './middlewares/globalErrorHandler';
-import notFound from './middlewares/notFound';
+import cookieParser from "cookie-parser";
+import { globalErrorHandler } from './app/middlewares/globalErrorHandler';
+import notFound from './app/middlewares/notFound';
 import { routes } from './app/routes';
+import expressSession from "express-session";
+import passport from "passport";
+import "./app/config/passport";
+import { envVars } from './app/config/env';
 
 dotenv.config();
 const app: Application = express();
 
-// app.use(cors({
-//     origin: envVars.FRONTEND_URL,
-//     credentials: true
-// }))
+app.use(cors({
+    origin: envVars.FRONTEND_URL,
+    credentials: true
+}))
 app.use(express.json());
+app.use(cookieParser())
+app.use(expressSession({
+        secret: envVars.EXPRESS_SESSION_SECRET,  
+        resave: false,                          
+        saveUninitialized: false              
+    }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // All the API routes
 app.use("/api/v1", routes);

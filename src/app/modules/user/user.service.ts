@@ -1,9 +1,10 @@
 import { StatusCodes } from "http-status-codes";
-import AppError from "../../../errorHelpers/AppError";
+import AppError from "../../errorHelpers/AppError";
 import { IUser, Status } from "./user.interface";
 import { User } from "./user.model";
 import bcrypt from "bcryptjs";
-import { envVars } from "../../../config/env";
+import { envVars } from "../../config/env";
+import { JwtPayload } from "jsonwebtoken";
 
 // Get all users 
 const getAllUsers = async () => {  
@@ -26,10 +27,14 @@ const createUser = async (payload: IUser) => {
     return user
 };
 
-// Change user status
-const changeUserStatus = async (userId: string, userStatus: Status) => {  
-    // Checking is user exist
+// Change user status 
+const changeUserStatus = async (userId: string, userStatus: Status, decodedToken: JwtPayload) => {  
+    
     const isUserExist = await User.findById(userId);
+    if (userId !==decodedToken.userId || isUserExist?.email !== decodedToken.email || isUserExist?.role !== decodedToken.role) {
+        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    }
+    // Checking is user exist
     if (!isUserExist) { 
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");   
     }

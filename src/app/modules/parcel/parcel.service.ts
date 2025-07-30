@@ -1,11 +1,12 @@
 import { StatusCodes } from "http-status-codes";
-import AppError from "../../../errorHelpers/AppError";
+import AppError from "../../errorHelpers/AppError";
 import { IParcel, ParcelStatus } from "./parcel.interface";
 import { Parcel } from "./parcel.model";
 import { User } from "../user/user.model";
 import { generateTrackingId } from "../../utils/generateTrackingId";
 import { feeCalculator } from "../../utils/feeCalculator";
 import mongoose from "mongoose";
+import { JwtPayload } from "jsonwebtoken";
 
 
 // Get all parcels
@@ -14,11 +15,16 @@ const getAllParcels = async () => {
     return parcels;
 };
 
-/* Role = SENDER */
+ /* SENDER API services */
 // Send parcel to a User (i.e., User = RECEIVER)
-const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean}) => {  
-    const { senderID,receiverEmail, weight, insideDhaka } = payload;
+const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }, decodedToken: JwtPayload) => {  
+    
+    const { senderID, receiverEmail, weight, insideDhaka } = payload;
 
+    if (senderID !== decodedToken.userId) {
+        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    }
+    
     // Checking is user blocked
     const sender = await User.findById(senderID);
     if (!sender) {
@@ -31,6 +37,7 @@ const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean}) =
     const receiver = await User.findOne({email: receiverEmail});
     if (!receiver) {
         throw new AppError(StatusCodes.NOT_FOUND, "Receiver not found");   
+
     }
     if (receiver?.status === 'Blocked') {
         throw new AppError(StatusCodes.BAD_REQUEST, "Receiver is blocked");   
@@ -47,7 +54,11 @@ const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean}) =
 
 
 // Get all parcels send by a User (i.e., User = SENDER)
-const getParcelsBySender = async (senderId: string) => {  
+const getParcelsBySender = async (senderId: string, decodedToken: JwtPayload) => {
+    
+    if (senderId !== decodedToken.userId) {
+        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    }
     // Checking is user blocked
     const user = await User.findById(senderId);
     if (!user) {
@@ -63,7 +74,11 @@ const getParcelsBySender = async (senderId: string) => {
 
 
 // Cancel Parcel 
-const cancelParcel = async (parcelId: string) => {  
+const cancelParcel = async (parcelId: string, decodedToken: JwtPayload) => {  
+    if (parcelId !== decodedToken.userId) {
+        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    }
+
     // Checking is parcel blocked
     const parcel = await Parcel.findById(parcelId);
     if (!parcel) {
@@ -88,13 +103,14 @@ const cancelParcel = async (parcelId: string) => {
 };
 
 
+ /* RECEIVER API services */
+// Get all parcels send for a receiver 
+const getReceiverParcels = async (receiverEmail: string, decodedToken: JwtPayload) => {  
 
-
-/* Role = RECEIVER */
-// Get all parcels received by a user (i.e., User = RECEIVER)
-const getReceiverParcels = async (receiverEmail: string) => {  
-    // Checking is receiver blocked
-    const receiver = await User.findOne({email: receiverEmail});
+    const receiver = await User.findOne({ email: receiverEmail });
+    if (receiverEmail !== decodedToken.email || receiver?.role !== decodedToken.role) {
+        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    }
     if (!receiver) {
         throw new AppError(StatusCodes.NOT_FOUND, "Receiver not found");   
     }
@@ -108,6 +124,7 @@ const getReceiverParcels = async (receiverEmail: string) => {
 
 // Confirm parcel received by the user (i.e., User = RECEIVER)
 const parcelReceived = async (parcelId: string) => {  
+
     // Checking is parcel blocked
     const parcel = await Parcel.findById(parcelId);
     if (!parcel) {
@@ -131,7 +148,10 @@ const parcelReceived = async (parcelId: string) => {
 };
 
 // Parcel Delivery history
-const getDeliveryHistory = async (receiverEmail: string) => {  
+const getDeliveryHistory = async (receiverEmail: string, decodedToken: JwtPayload) => {  
+    if (receiverEmail !== decodedToken.email) {
+        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    }
     const deliveries = await Parcel.aggregate([
         {
             $match: {
@@ -185,8 +205,8 @@ const getDeliveryHistory = async (receiverEmail: string) => {
     return deliveries; 
 };
 
-// Change parcel status
-const changeParcelStatus = async (parcelId: string, parcelStatus: boolean) => {  
+// Change parcel blocked status
+const changeParcelBlockedStatus = async (parcelId: string, parcelStatus: boolean) => {  
     // Checking is parcel exist
     const isParcelExist = await Parcel.findById(parcelId);
     if (!isParcelExist) { 
@@ -209,5 +229,5 @@ export const parcelServices = {
     getReceiverParcels,
     parcelReceived,
     getDeliveryHistory,
-    changeParcelStatus
+    changeParcelBlockedStatus
 }

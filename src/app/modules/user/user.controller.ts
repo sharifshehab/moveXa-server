@@ -4,6 +4,7 @@ import { sendResponse } from "../../utils/sendResponse";
 import {StatusCodes} from 'http-status-codes';
 import { userServices } from "./user.service";
 import { Status } from "./user.interface";
+import { JwtPayload } from "jsonwebtoken";
 
 
 // Get all users
@@ -30,9 +31,10 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 
 // Change user status
 const changeUserStatus = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user;
     const { userId } = req.params;
     const {  userStatus } = req.body;
-    const user = await userServices.changeUserStatus(userId, userStatus as Status);  
+    const user = await userServices.changeUserStatus(userId, userStatus as Status, decodedToken as JwtPayload);  
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,     

@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { envVars } from "../config/env";
 import AppError from "../errorHelpers/AppError";
-import { TErrorSources } from "../app/interfaces/error.types";
-import { handlerDuplicateError } from "../app/helpers/handleDuplicateError";
-import { handleCastError } from "../app/helpers/handleCastError";
-import { handlerZodError } from "../app/helpers/handlerZodError";
-import { handlerValidationError } from "../app/helpers/handlerValidationError";
+import { TErrorSources } from "../interfaces/error.types";
+import { handlerDuplicateError } from "../helpers/handleDuplicateError";
+import { handleCastError } from "../helpers/handleCastError";
+import { handlerZodError } from "../helpers/handlerZodError";
+import { handlerValidationError } from "../helpers/handlerValidationError";
 
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
