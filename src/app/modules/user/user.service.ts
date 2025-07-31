@@ -32,12 +32,19 @@ const getAllUsers = async () => {
     return users;
 };
 // Change user status 
-const changeUserStatus = async (userId: string, userStatus: Status) => {  
+const changeUserStatus = async (userId: string, userStatus: Status, decodedToken: JwtPayload) => {  
+
+    if (userId === decodedToken.userId) { 
+        throw new AppError(StatusCodes.FORBIDDEN, `Cannot change your own status`);   
+    }
     
     const user = await User.findById(userId);
     // Checking 
     if (!user) { 
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");   
+    }
+    if (user.role === Role.SUPER_ADMIN) { 
+        throw new AppError(StatusCodes.FORBIDDEN, `Cannot change super admin status`);   
     }
     if (userStatus === user.status) { 
         throw new AppError(StatusCodes.BAD_REQUEST, `User is already ${userStatus}`);   

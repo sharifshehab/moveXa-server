@@ -32,7 +32,7 @@ const credentialsLogin = catchAsync(async (req: Request, res: Response, next: Ne
         sendResponse(res, {
             success: true,
             statusCode: httpStatus.OK,
-            message: "User Logged In Successfully PJs",
+            message: "User Logged In Successfully",
             data: {
                 accessToken: userTokens.accessToken,
                 refreshToken: userTokens.refreshToken,
@@ -74,7 +74,8 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     res.clearCookie("accessToken", {
         maxAge: 0,
         httpOnly: true,
-        secure: false,
+        // secure: false,
+        secure: process.env.NODE_ENV === 'production', 
         sameSite: "lax"
     });
 
@@ -82,7 +83,8 @@ const logout = catchAsync(async (req: Request, res: Response) => {
     res.clearCookie("refreshToken", {
         maxAge: 0,
         httpOnly: true,
-        secure: false,
+        // secure: false,
+        secure: process.env.NODE_ENV === 'production', 
         sameSite: "lax"
     });
 

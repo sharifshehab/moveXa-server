@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import app from "./app";
 import {Server} from "http";
 import {envVars} from "./app/config/env";

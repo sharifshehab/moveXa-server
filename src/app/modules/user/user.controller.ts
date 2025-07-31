@@ -31,9 +31,10 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
 });
 // Change user status
 const changeUserStatus = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user; 
     const { userId } = req.params;
     const {  userStatus } = req.body;
-    const user = await userServices.changeUserStatus(userId, userStatus as Status);  
+    const user = await userServices.changeUserStatus(userId, userStatus as Status, decodedToken as JwtPayload);  
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,     

@@ -14,8 +14,6 @@ export const createUserTokens = (user: Partial<IUser>) => {
         email: user.email,
         role: user.role
     }
-
-    console.log('time',envVars.JWT_ACCESS_EXPIRES);
     
     const accessToken = generateToken(jwtPayload, envVars.JWT_ACCESS_SECRET, envVars.JWT_ACCESS_EXPIRES);     // Calling the the token generator function, to create a access token
     /* secrete_key and expire_time are saved on the ".env" file */

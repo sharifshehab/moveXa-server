@@ -82,13 +82,16 @@ const cancelParcel = async (parcelId: string, decodedToken: JwtPayload) => {
     if (!parcel) {
         throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
     }
-    if (parcel?.currentStatus === ParcelStatus.DISPATCHED) {
+    if (parcel.senderID.toString() !== decodedToken.userId) {
+        throw new AppError(StatusCodes.FORBIDDEN, "This parcel is not yours!");   
+    }
+    if (parcel.currentStatus === ParcelStatus.DISPATCHED) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Parcel has already been dispatched, cannot be cancelled now!");   
     }
-    if (parcel?.currentStatus === ParcelStatus.BLOCKED) {
+    if (parcel.currentStatus === ParcelStatus.BLOCKED) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Parcel is blocked");   
     }
-    if (parcel?.currentStatus === ParcelStatus.CANCELLED) {
+    if (parcel.currentStatus === ParcelStatus.CANCELLED) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Parcel has already been cancelled!");   
     }
 
@@ -147,6 +150,7 @@ const parcelReceived = async (parcelId: string, receiveParcel:boolean, decodedTo
 
     if (parcel.currentStatus === "DELIVERED") {
         if (receiveParcel) {
+            parcel.currentStatus = ParcelStatus.RECEIVED;
             parcel.statusLog.push({
                 status: ParcelStatus.RECEIVED,
                 timestamp: new Date(),
@@ -170,14 +174,16 @@ const parcelReceived = async (parcelId: string, receiveParcel:boolean, decodedTo
 };
 // Parcel Delivery history
 const getDeliveryHistory = async (receiverEmail: string, decodedToken: JwtPayload) => {  
+
     if (receiverEmail !== decodedToken.email || decodedToken.role !== Role.RECEIVER) {
         throw new AppError(StatusCodes.FORBIDDEN, "You are not permitted to do this operation");  
     }
+    
     const deliveries = await Parcel.aggregate([
         {
             $match: {
                 receiverEmail,
-                currentStatus: "DELIVERED"
+                currentStatus: { $in: ["RECEIVED", "RETURNED"]}
             }
         },
         {
@@ -211,17 +217,9 @@ const getDeliveryHistory = async (receiverEmail: string, decodedToken: JwtPayloa
                 weight: 1,
                 parcelType: '$type',
                 deliveryFee: '$fee',
-                statusLog: {
-                    $filter: {
-                        input: "$statusLog",
-                        as: "log",
-                        cond: { $eq: ["$$log.status", "DELIVERED"]}
-                    },
-
-                }
+                statusHistory: '$statusLog'
             }
         },
-        { $unwind: '$statusLog' }
     ])
     return deliveries; 
 };
@@ -234,14 +232,14 @@ const changeParcelStatus = async (parcelId: string, parcelStatus: ParcelStatus, 
     if (!parcel) { 
         throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
     }
-    if (parcel.isApproved) { 
+    if (!parcel.isApproved) { 
         throw new AppError(StatusCodes.BAD_REQUEST, `Parcel is not approved yet.`);   
+    }
+    if ([ParcelStatus.RECEIVED, ParcelStatus.RETURNED].includes(parcelStatus)) { 
+        throw new AppError(StatusCodes.BAD_REQUEST, `You cannot assign ${parcelStatus} status for the Parcel`);   
     }
     if (parcel.currentStatus === parcelStatus) { 
         throw new AppError(StatusCodes.BAD_REQUEST, `Parcel status is already ${parcelStatus}`);   
-    }
-    if (parcelStatus === (ParcelStatus.RECEIVED || ParcelStatus.RETURNED)) { 
-        throw new AppError(StatusCodes.BAD_REQUEST, `You cannot assign ${parcelStatus} status for the Parcel`);   
     }
     
     parcel.currentStatus = parcelStatus;

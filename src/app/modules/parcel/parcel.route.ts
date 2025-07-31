@@ -16,7 +16,7 @@ parcelRoutes.get('/sender-parcels/:senderId', checkAuth(Role.SENDER), parcelCont
 parcelRoutes.patch('/cancel/:parcelId', checkAuth(Role.SENDER), parcelController.cancelParcel);                             // Cancel parcel by user (i.e., user = SENDER)
 
 /* Receiver routes */
-parcelRoutes.get('/receiver-parcels/:receiverEmail', checkAuth(Role.RECEIVER), parcelController.getReceiverParcels);     // Get all parcels send for a receiver  
+parcelRoutes.get('/receiver-parcels/:receiverEmail', checkAuth(Role.RECEIVER), parcelController.getReceiverParcels);      // Get all parcels send for a receiver  
 parcelRoutes.patch('/parcel-received/:parcelId', checkAuth(Role.RECEIVER), parcelController.parcelReceived);             // Confirm parcel received by the user (i.e., user = RECEIVER)
 parcelRoutes.get('/delivery-history/:receiverEmail', checkAuth(Role.RECEIVER), parcelController.getDeliveryHistory);    // Parcel delivery history
 

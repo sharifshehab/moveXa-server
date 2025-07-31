@@ -3,6 +3,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import {StatusCodes} from 'http-status-codes';
 import { Parcel } from "../parcel/parcel.model";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { User } from "../user/user.model";
 
 
