@@ -6,8 +6,12 @@ import { Role } from "./user.interface";
 import { checkAuth } from "../../middlewares/checkAuth";
 
 export const userRoutes = Router();
-                                /* remove the "RECEIVER" */
-userRoutes.get('/all-users', checkAuth(Role.RECEIVER, Role.ADMIN), userController.getAllUsers);  // Get all users
+
 userRoutes.post('/register', validateRequest(createUserZodSchema), userController.createUser);  // Create user
-                                            /* remove the "RECEIVER" */
-userRoutes.patch('/user-status/:userId', checkAuth(Role.RECEIVER, Role.ADMIN), userController.changeUserStatus); // Change user status
+
+/* Super Admin & Admin routes */
+userRoutes.get('/all-users', checkAuth(Role.SUPER_ADMIN, Role.ADMIN), userController.getAllUsers);  // Get all users
+userRoutes.patch('/user-status/:userId', checkAuth(Role.SUPER_ADMIN, Role.ADMIN), userController.changeUserStatus); // Change user status
+
+/* Super Admin route */
+userRoutes.patch('/assign-admin/:userId', checkAuth(Role.SUPER_ADMIN), userController.changeUserRole); // Change user role

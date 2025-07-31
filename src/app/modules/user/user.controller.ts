@@ -7,17 +7,6 @@ import { Status } from "./user.interface";
 import { JwtPayload } from "jsonwebtoken";
 
 
-// Get all users
-const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-    const allUsers = await userServices.getAllUsers();  
-    sendResponse(res, {
-        success: true,
-        statusCode: StatusCodes.OK,     
-        message: "All Users Retrieved Successfully",
-        data: allUsers,
-    })
-});
-
 // Create user
 const createUser = catchAsync(async (req: Request, res: Response) => {
     const user = await userServices.createUser(req.body);  
@@ -29,12 +18,22 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
+ /* Super Admin & Admin controllers */
+// Get all users
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+    const allUsers = await userServices.getAllUsers();  
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,     
+        message: "All Users Retrieved Successfully",
+        data: allUsers,
+    })
+});
 // Change user status
 const changeUserStatus = catchAsync(async (req: Request, res: Response) => {
-    const decodedToken = req.user;
     const { userId } = req.params;
     const {  userStatus } = req.body;
-    const user = await userServices.changeUserStatus(userId, userStatus as Status, decodedToken as JwtPayload);  
+    const user = await userServices.changeUserStatus(userId, userStatus as Status);  
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,     
@@ -43,10 +42,25 @@ const changeUserStatus = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
+ /* Super Admin route */
+// Change user Role
+const changeUserRole = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user; 
+    const { userId } = req.params;
+    const user = await userServices.changeUserRole(userId, decodedToken as JwtPayload);  
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,     
+        message: "User Role Changed Successfully",
+        data: user,
+    })
+});
+
 
 export const userController = {
-    getAllUsers,
     createUser,
-    changeUserStatus
+    getAllUsers,
+    changeUserStatus,
+    changeUserRole
 };
 

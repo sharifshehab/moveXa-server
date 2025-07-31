@@ -71,6 +71,10 @@ payment: {
     enum: Object.values(Payment),
     default: Payment.UNPAID  
 }, 
+isApproved: {
+    type: Boolean,         
+    default: false
+},
 currentStatus: {
     type: String, 
     enum: {
@@ -81,16 +85,8 @@ currentStatus: {
 },
 statusLog: {
     type: [statusLogSchema],         
-    default: []
+    required: true
 },
-isBlocked: {
-    type: Boolean,    
-    default: false   
-},
-isCancelled: {
-    type: Boolean,         
-    default: false       
-}
 },
     {
         versionKey: false,

@@ -1,14 +1,15 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
-import { IParcel, ParcelStatus } from "./parcel.interface";
+import { IParcel, ParcelStatus, Payment } from "./parcel.interface";
 import { Parcel } from "./parcel.model";
 import { User } from "../user/user.model";
 import { generateTrackingId } from "../../utils/generateTrackingId";
 import { feeCalculator } from "../../utils/feeCalculator";
-import mongoose from "mongoose";
+import { Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
+import { Role, Status } from "../user/user.interface";
 
-
+ /* Super Admin & Admin API controllers */
 // Get all parcels
 const getAllParcels = async () => {  
     const parcels = await Parcel.find({});
@@ -16,87 +17,86 @@ const getAllParcels = async () => {
 };
 
  /* SENDER API services */
-// Send parcel to a User (i.e., User = RECEIVER)
-const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }, decodedToken: JwtPayload) => {  
+// Send parcel to a user (i.e., user = RECEIVER)
+const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }) => {  
     
     const { senderID, receiverEmail, weight, insideDhaka } = payload;
-
-    if (senderID !== decodedToken.userId) {
-        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    if (!senderID) {
+        throw new AppError(StatusCodes.NOT_FOUND, "Sender Id is required");   
     }
-    
-    // Checking is user blocked
+
+    // Checking sender
     const sender = await User.findById(senderID);
     if (!sender) {
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");   
     }
-    if (sender?.status === 'Blocked') {
-        throw new AppError(StatusCodes.BAD_REQUEST, "User is blocked");   
+    if (sender?.status === Status.BLOCKED) {
+        throw new AppError(StatusCodes.BAD_REQUEST, `User is blocked`);   
     }
-    // Checking is receiver blocked
+    // Checking receiver 
     const receiver = await User.findOne({email: receiverEmail});
     if (!receiver) {
         throw new AppError(StatusCodes.NOT_FOUND, "Receiver not found");   
 
     }
-    if (receiver?.status === 'Blocked') {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Receiver is blocked");   
+    if (receiver?.status === Status.BLOCKED) {
+        throw new AppError(StatusCodes.BAD_REQUEST, `Receiver is blocked`);   
     }
 
     // Generate tracking_Id
     const trackingID = generateTrackingId();
     // Calculate parcel fee
     const fee = feeCalculator(weight as number, insideDhaka);
-
-    const parcel = await Parcel.create({...payload, fee, trackingID});
+    // Sender status log
+    const statusLog = {
+        status: ParcelStatus.REQUESTED,
+        timestamp: new Date(),
+        updatedBy: Types.ObjectId.createFromHexString(senderID.toString()) 
+    }
+    const parcel = await Parcel.create({...payload, statusLog, fee, trackingID});
     return parcel;
 };
-
-
-// Get all parcels send by a User (i.e., User = SENDER)
+// Get all parcels send by a user (i.e., user = SENDER)
 const getParcelsBySender = async (senderId: string, decodedToken: JwtPayload) => {
     
-    if (senderId !== decodedToken.userId) {
-        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
-    }
-    // Checking is user blocked
+    // Checking
     const user = await User.findById(senderId);
     if (!user) {
         throw new AppError(StatusCodes.NOT_FOUND, "User not found");   
     }
-    if (user?.status === 'Blocked') {
-        throw new AppError(StatusCodes.BAD_REQUEST, "User is blocked");   
+    if (senderId !== decodedToken.userId || user.role !== Role.SENDER) {
+        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    }
+    if (user?.status === Status.BLOCKED) {
+        throw new AppError(StatusCodes.BAD_REQUEST, `User is blocked`);   
     }
 
     const parcels = await Parcel.find({senderID: senderId});
     return parcels; 
 };
-
-
 // Cancel Parcel 
 const cancelParcel = async (parcelId: string, decodedToken: JwtPayload) => {  
-    if (parcelId !== decodedToken.userId) {
-        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
-    }
 
-    // Checking is parcel blocked
+    // Checking
     const parcel = await Parcel.findById(parcelId);
     if (!parcel) {
         throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
     }
-    if (parcel?.isBlocked) {
+    if (parcel?.currentStatus === ParcelStatus.DISPATCHED) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel has already been dispatched, cannot be cancelled now!");   
+    }
+    if (parcel?.currentStatus === ParcelStatus.BLOCKED) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Parcel is blocked");   
     }
-    if (parcel?.currentStatus === "DISPATCHED") {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel already dispatched, cannot be cancelled now!");   
+    if (parcel?.currentStatus === ParcelStatus.CANCELLED) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel has already been cancelled!");   
     }
 
     parcel.currentStatus = ParcelStatus.CANCELLED;
-    parcel.isCancelled = true;
     parcel.statusLog.push({
         status: ParcelStatus.CANCELLED,
         timestamp: new Date(),
-        updatedBy: new mongoose.Types.ObjectId("6888eae5bc449833ae074f82") // Remove this with the token user id
+        updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString()) 
     });
     await parcel.save();
     return parcel; 
@@ -108,49 +108,70 @@ const cancelParcel = async (parcelId: string, decodedToken: JwtPayload) => {
 const getReceiverParcels = async (receiverEmail: string, decodedToken: JwtPayload) => {  
 
     const receiver = await User.findOne({ email: receiverEmail });
-    if (receiverEmail !== decodedToken.email || receiver?.role !== decodedToken.role) {
-        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
-    }
     if (!receiver) {
         throw new AppError(StatusCodes.NOT_FOUND, "Receiver not found");   
     }
-    if (receiver?.status === 'Blocked') {
+    if (receiverEmail !== decodedToken.email || receiver.role !== Role.RECEIVER) {
+        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    }
+    if (receiver?.status === Status.BLOCKED) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Receiver is blocked");   
     }
 
     const parcels = await Parcel.find({receiverEmail});
     return parcels; 
 };
+// Confirm parcel received by the user (i.e., user = RECEIVER)
+const parcelReceived = async (parcelId: string, receiveParcel:boolean, decodedToken: JwtPayload) => {  
 
-// Confirm parcel received by the user (i.e., User = RECEIVER)
-const parcelReceived = async (parcelId: string) => {  
-
-    // Checking is parcel blocked
+    // Checking
     const parcel = await Parcel.findById(parcelId);
     if (!parcel) {
         throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
     }
-    if (parcel?.isBlocked) {
+    if (decodedToken.role !== Role.RECEIVER) {
+        throw new AppError(StatusCodes.FORBIDDEN, "You are not permitted to do this operation");  
+    }
+    if (parcel.receiverEmail !== decodedToken.email) {
+        throw new AppError(StatusCodes.FORBIDDEN, "This parcel is not yours!");   
+    }
+    if (parcel.currentStatus === ParcelStatus.BLOCKED) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Parcel is blocked");   
     }
-    if (parcel?.isCancelled) {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel is cancelled");   
+    if (parcel.currentStatus === ParcelStatus.CANCELLED) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel was cancelled");   
+    }
+    if (parcel.currentStatus === ParcelStatus.RECEIVED) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel has already been received");   
     }
 
-    parcel.currentStatus = ParcelStatus.DELIVERED;
-    parcel.statusLog.push({
-        status: ParcelStatus.DELIVERED,
-        timestamp: new Date(),
-        updatedBy: new mongoose.Types.ObjectId("6888eae5bc449833ae074f82") // Remove this with the token user id
-    });
-    await parcel.save();
-    return parcel; 
+    if (parcel.currentStatus === "DELIVERED") {
+        if (receiveParcel) {
+            parcel.statusLog.push({
+                status: ParcelStatus.RECEIVED,
+                timestamp: new Date(),
+                updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString()) 
+            });
+            await parcel.save();
+            return parcel; 
+        } else {
+            parcel.currentStatus = ParcelStatus.RETURNED;
+            parcel.statusLog.push({
+                status: ParcelStatus.RETURNED,
+                timestamp: new Date(),
+                updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString()) 
+            });
+            await parcel.save();
+            return parcel; 
+        }
+    } else {
+        return null;
+    }
 };
-
 // Parcel Delivery history
 const getDeliveryHistory = async (receiverEmail: string, decodedToken: JwtPayload) => {  
-    if (receiverEmail !== decodedToken.email) {
-        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    if (receiverEmail !== decodedToken.email || decodedToken.role !== Role.RECEIVER) {
+        throw new AppError(StatusCodes.FORBIDDEN, "You are not permitted to do this operation");  
     }
     const deliveries = await Parcel.aggregate([
         {
@@ -205,20 +226,53 @@ const getDeliveryHistory = async (receiverEmail: string, decodedToken: JwtPayloa
     return deliveries; 
 };
 
-// Change parcel blocked status
-const changeParcelBlockedStatus = async (parcelId: string, parcelStatus: boolean) => {  
-    // Checking is parcel exist
-    const isParcelExist = await Parcel.findById(parcelId);
-    if (!isParcelExist) { 
+/* Super Admin & Admin service */
+// Change parcel status
+const changeParcelStatus = async (parcelId: string, parcelStatus: ParcelStatus, decodedToken: JwtPayload) => {  
+    // Checking 
+    const parcel = await Parcel.findById(parcelId);
+    if (!parcel) { 
         throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
     }
-    
-    if (parcelStatus === isParcelExist.isBlocked) { 
+    if (parcel.isApproved) { 
+        throw new AppError(StatusCodes.BAD_REQUEST, `Parcel is not approved yet.`);   
+    }
+    if (parcel.currentStatus === parcelStatus) { 
         throw new AppError(StatusCodes.BAD_REQUEST, `Parcel status is already ${parcelStatus}`);   
     }
+    if (parcelStatus === (ParcelStatus.RECEIVED || ParcelStatus.RETURNED)) { 
+        throw new AppError(StatusCodes.BAD_REQUEST, `You cannot assign ${parcelStatus} status for the Parcel`);   
+    }
+    
+    parcel.currentStatus = parcelStatus;
+    parcel.statusLog.push({
+        status: parcelStatus,
+        timestamp: new Date(),
+        updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString()) 
+    });
 
-    const parcel = await Parcel.findByIdAndUpdate(parcelId, { isBlocked: parcelStatus}, { new: true, runValidators: true });
-    return parcel
+    await parcel.save()
+    return parcel;
+};
+
+/* Super Admin service */
+// Approve parcel
+const approveParcel = async (parcelId: string, decodedToken: JwtPayload) => { 
+    if (decodedToken.role !== Role.SUPER_ADMIN) {
+        throw new AppError(StatusCodes.NOT_FOUND, "You are not permitted to do this operation");  
+    }
+    // Checking 
+    const parcel = await Parcel.findById(parcelId);
+    if (!parcel) { 
+        throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
+    }
+    if (parcel.payment === Payment.UNPAID) { 
+        throw new AppError(StatusCodes.BAD_REQUEST, `Parcel fee is ${Payment.UNPAID}`);   
+    }
+
+    parcel.isApproved = true;
+    await parcel.save();
+    return parcel;
 };
 
 export const parcelServices = {
@@ -229,5 +283,6 @@ export const parcelServices = {
     getReceiverParcels,
     parcelReceived,
     getDeliveryHistory,
-    changeParcelBlockedStatus
+    changeParcelStatus,
+    approveParcel
 }

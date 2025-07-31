@@ -2,13 +2,13 @@ import { Types } from "mongoose";
 
 export enum ParcelStatus {
     REQUESTED = "REQUESTED",
-    APPROVED = "APPROVED",
+    CANCELLED = "CANCELLED",
+    BLOCKED = "BLOCKED",
     DISPATCHED = "DISPATCHED",
     IN_TRANSIT = "IN_TRANSIT",
     DELIVERED = "DELIVERED",
-    CANCELLED = "CANCELLED",
     RETURNED = "RETURNED",
-    BLOCKED = "BLOCKED"
+    RECEIVED = "RECEIVED"
 }
 export enum ParcelType {
     DOCUMENT = "DOCUMENT",
@@ -24,13 +24,12 @@ export enum Payment {
 export interface IStatusLog {
     status: ParcelStatus;
     timestamp: Date;
-    updatedBy?: Types.ObjectId;
+    updatedBy: Types.ObjectId;
 }
 
 export interface IParcel {
     trackingID: string;
     senderID: Types.ObjectId;
-    // receiverID: Types.ObjectId;
     receiverEmail: string;
     senderAddress: string;
     receiverAddress: string;
@@ -38,8 +37,8 @@ export interface IParcel {
     type: ParcelType;
     fee: number;
     payment: Payment;
+    isApproved: boolean
     currentStatus: ParcelStatus;
-    statusLog:IStatusLog[];
-    isBlocked: boolean;
-    isCancelled: boolean;
+    statusLog: IStatusLog[];
+    
 };

@@ -40,9 +40,8 @@ if (!isUserExist) {
     throw new AppError(httpStatus.BAD_REQUEST, "User does not exist")
 }
 if (isUserExist.status === Status.BLOCKED) {
-    throw new AppError(httpStatus.BAD_REQUEST, `User is ${Status.BLOCKED}`)
+    throw new AppError(httpStatus.BAD_REQUEST, `User is blocked`)
 }
-
 
 const jwtPayload = {
     userId: isUserExist._id,

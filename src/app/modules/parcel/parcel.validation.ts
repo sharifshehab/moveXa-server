@@ -14,14 +14,13 @@ export const sendParcelZodSchema = z.object({
     receiverEmail: z.email(),
     senderAddress: z.string(),
     receiverAddress: z.string(),
-    weight: z.number(),
+    weight: z.number().positive(),
     type: z.enum(ParcelType),
     insideDhaka: z.boolean(),
     fee: z.number().optional(),
     payment: z.enum(Payment).optional(),
+    isApproved: z.boolean().optional(),
     currentStatus: z.enum(ParcelStatus).optional(),
     statusLog: z.array(statusLogZodSchema).optional(),
-    isBlocked: z.boolean().optional(),
-    isCancelled: z.boolean().optional(),
 });
 

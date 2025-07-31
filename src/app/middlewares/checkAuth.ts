@@ -12,15 +12,12 @@ export const checkAuth = (...authRoles: string[]) => async (req: Request, res: R
     try {
         const accessToken = req.headers.authorization; // Receiving the token from the client-side
 
-        // This will be used: const accessToken = req.cookies.accessToken;
-
         if (!accessToken) {
             throw new AppError(403, "No Token Received")
         }
         
-        // Calling token verifying function, and getting the user data
+        // Calling token verifying function
         const verifiedToken = verifyToken(accessToken, envVars.JWT_ACCESS_SECRET) as JwtPayload
-        // verifiedToken = { userId, email, role }
 
         const isUserExist = await User.findOne({ email: verifiedToken.email })
 
@@ -35,10 +32,6 @@ export const checkAuth = (...authRoles: string[]) => async (req: Request, res: R
             throw new AppError(403, "You are not permitted to view this route!!!")
         }
         req.user = verifiedToken
-        /*
-            Assigning the token-data to "req.user" (custom added), similar to how we use "req.body" or "req.params" to access any data.
-            Now, on any route where "checkAuth" middleware is used, I can access the token-data using "req.user"
-        */
         next()
 
     } catch (error) {

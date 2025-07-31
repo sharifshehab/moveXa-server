@@ -5,9 +5,9 @@ import {StatusCodes} from 'http-status-codes';
 import { parcelServices } from "./parcel.service";
 import { JwtPayload } from "jsonwebtoken";
 
+ /* Super Admin & Admin API controller */
 // Get all parcels
 const getAllParcels = catchAsync(async (req: Request, res: Response) => {
-
     const allParcels = await parcelServices.getAllParcels();  
     sendResponse(res, {
         success: true,
@@ -19,10 +19,9 @@ const getAllParcels = catchAsync(async (req: Request, res: Response) => {
 
 
  /* SENDER API controllers */     
-// Send parcel to a User (i.e., User = RECEIVER)         /* Done */------------------>
+// Send parcel to a user (i.e., user = RECEIVER)         
 const sendParcel = catchAsync(async (req: Request, res: Response) => {
-    const decodedToken = req.user; 
-    const parcel = await parcelServices.sendParcel(req.body, decodedToken as JwtPayload);  
+    const parcel = await parcelServices.sendParcel(req.body);  
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.CREATED,     
@@ -30,9 +29,7 @@ const sendParcel = catchAsync(async (req: Request, res: Response) => {
         data: parcel,
     })
 });
-
-
-// Get all parcels send by a User (i.e., User = SENDER) /* Done */------------------>
+// Get all parcels send by a user (i.e., user = SENDER) 
 const getParcelsBySender = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user; 
     const { senderId } = req.params;
@@ -45,8 +42,6 @@ const getParcelsBySender = catchAsync(async (req: Request, res: Response) => {
         data: parcels,
     })
 });
-
-
 // Cancel parcel 
 const cancelParcel = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user; 
@@ -77,20 +72,20 @@ const getReceiverParcels = catchAsync(async (req: Request, res: Response) => {
         data: parcels,
     })
 });
-
-// Confirm parcel received by the user (i.e., User = RECEIVER)
+// Confirm parcel received by the user (i.e., user = RECEIVER)
 const parcelReceived = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user; 
     const { parcelId } = req.params;
-    const parcel = await parcelServices.parcelReceived(parcelId);  
+    const { receiveParcel } = req.body;
+    const parcel = await parcelServices.parcelReceived(parcelId, receiveParcel, decodedToken as JwtPayload);  
 
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.CREATED,     
-        message: "Parcel Received Successfully",
+        message: parcel? (parcel.currentStatus !== "RETURNED"? "Parcel Received Successfully":  "Parcel Returned Successfully") : "Parcel hasn't been delivered yet.",
         data: parcel,
     })
 });
-
 // Parcel Delivery history
 const getDeliveryHistory = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user; 
@@ -105,16 +100,33 @@ const getDeliveryHistory = catchAsync(async (req: Request, res: Response) => {
     })
 });
 
-// Change parcel blocked status
-const changeParcelBlockedStatus = catchAsync(async (req: Request, res: Response) => {
+
+ /* Super Admin & Admin API controller */
+// Change parcel status
+const changeParcelStatus = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user; 
     const { parcelId } = req.params;
     const { parcelStatus } = req.body;
-    const user = await parcelServices.changeParcelBlockedStatus(parcelId, parcelStatus);  
+    const parcel = await parcelServices.changeParcelStatus(parcelId, parcelStatus, decodedToken as JwtPayload);  
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,     
         message: "Parcel Status Changed Successfully",
-        data: user,
+        data: parcel,
+    })
+});
+
+ /* Super Admin API controller */
+// Approve parcel
+const approveParcel = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user; 
+    const { parcelId } = req.params;
+    const parcel = await parcelServices.approveParcel(parcelId, decodedToken as JwtPayload);  
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,     
+        message: "Parcel Approved Successfully",
+        data: parcel,
     })
 });
 
@@ -127,5 +139,6 @@ export const parcelController = {
     getReceiverParcels,
     parcelReceived,
     getDeliveryHistory,
-    changeParcelBlockedStatus
+    changeParcelStatus,
+    approveParcel
 };
