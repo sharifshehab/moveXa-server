@@ -33,7 +33,7 @@ app.use("/api/v1", routes);
 
 // Main route
 app.get('/', (req: Request, res: Response) => {
-            res.send('Welcome to Movexa Server')
+            res.send('Welcome to MoveXa Server')
 });
 
 // Global Error Handler
