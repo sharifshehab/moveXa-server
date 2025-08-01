@@ -37,7 +37,7 @@ interface EnvConfig {
             EXPRESS_SESSION_SECRET: process.env.EXPRESS_SESSION_SECRET as string,
             SUPER_ADMIN_EMAIL: process.env.SUPER_ADMIN_EMAIL as string,
             SUPER_ADMIN_PASSWORD: process.env.SUPER_ADMIN_PASSWORD as string,
-            FRONTEND_URL: process.env.FRONTEND_URL as string,
+            FRONTEND_URL: process.env.FRONTEND_URL as string
         }
     }
 

@@ -1,5 +1,5 @@
 import z from "zod";
-import { ParcelStatus, ParcelType, Payment } from "./parcel.interface";
+import { ParcelStatus, ParcelType } from "./parcel.interface";
 
 
 const statusLogZodSchema = z.object({
@@ -18,7 +18,6 @@ export const sendParcelZodSchema = z.object({
     type: z.enum(ParcelType),
     insideDhaka: z.boolean(),
     fee: z.number().optional(),
-    payment: z.enum(Payment).optional(),
     isApproved: z.boolean().optional(),
     currentStatus: z.enum(ParcelStatus).optional(),
     statusLog: z.array(statusLogZodSchema).optional(),

@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { IParcel, IStatusLog, ParcelStatus, ParcelType, Payment } from "./parcel.interface";
+import { IParcel, IStatusLog, ParcelStatus, ParcelType } from "./parcel.interface";
 
 // Embedded
 const statusLogSchema = new Schema<IStatusLog>(
@@ -66,11 +66,6 @@ fee: {
     type: Number,         
     required: true     
 },
-payment: {
-    type: String,       
-    enum: Object.values(Payment),
-    default: Payment.UNPAID  
-}, 
 isApproved: {
     type: Boolean,         
     default: false

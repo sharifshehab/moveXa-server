@@ -1,8 +1,35 @@
 # MoveXa
 
-MoveXa is a parcel delivery system
+MoveXa is a parcel delivery system that enables users to seamlessly send and receive parcels across different locations. Users can register as a Sender or Receiver, with an Admin managing the overall system. MoveXa provides a structured way to manage parcels, track delivery stages, and maintain a history of parcel status changes through a clean, well-organized API.
 
-library management system aims to simplify library operations by automating book tracking and borrowing processes. This system offers a structured way to manage books, track borrowing history, and generate summaries of borrowed records, all through a well-organized API. 
+
+#### Sender:
+- **Register and log in**
+
+- **Send parcels to registered receivers**
+
+- **View all parcels sent**
+
+- **Cancel parcels if needed**
+
+#### Receiver:
+- **View all parcels sent to them**
+
+- **Confirm parcel delivery (mark as received)**
+
+- **View their parcel delivery history**
+
+#### Admin:
+- **Manage user status (e.g., block/unblock users)**
+
+- **Update parcel status through different delivery stages**
+
+- **Access and control all system operations via protected admin routes**
+
+
+
+Security & Access Control
+All routes are protected based on user roles (Sender, Receiver, Admin), ensuring secure access to authorized actions only.
 
 
 ## Tech Stack:

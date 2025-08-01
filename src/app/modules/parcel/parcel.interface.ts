@@ -16,10 +16,6 @@ export enum ParcelType {
     CLOTHING = "CLOTHING",
     OTHER = "OTHER"
 }
-export enum Payment {
-    PAID = "PAID",
-    UNPAID = "UNPAID"
-}
 
 export interface IStatusLog {
     status: ParcelStatus;
@@ -36,7 +32,6 @@ export interface IParcel {
     weight: number;
     type: ParcelType;
     fee: number;
-    payment: Payment;
     isApproved: boolean
     currentStatus: ParcelStatus;
     statusLog: IStatusLog[];

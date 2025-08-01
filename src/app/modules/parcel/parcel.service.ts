@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
-import { IParcel, ParcelStatus, Payment } from "./parcel.interface";
+import { IParcel, ParcelStatus } from "./parcel.interface";
 import { Parcel } from "./parcel.model";
 import { User } from "../user/user.model";
 import { generateTrackingId } from "../../utils/generateTrackingId";
@@ -53,7 +54,7 @@ const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }) 
         timestamp: new Date(),
         updatedBy: Types.ObjectId.createFromHexString(senderID.toString()) 
     }
-    const parcel = await Parcel.create({...payload, statusLog, fee, trackingID});
+    const parcel = await Parcel.create({ ...payload, statusLog, fee, trackingID });
     return parcel;
 };
 // Get all parcels send by a user (i.e., user = SENDER)
@@ -263,9 +264,6 @@ const approveParcel = async (parcelId: string, decodedToken: JwtPayload) => {
     const parcel = await Parcel.findById(parcelId);
     if (!parcel) { 
         throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
-    }
-    if (parcel.payment === Payment.UNPAID) { 
-        throw new AppError(StatusCodes.BAD_REQUEST, `Parcel fee is ${Payment.UNPAID}`);   
     }
 
     parcel.isApproved = true;
