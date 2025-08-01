@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { IParcel, ParcelStatus } from "./parcel.interface";
@@ -10,11 +9,47 @@ import { Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 import { Role, Status } from "../user/user.interface";
 
- /* Super Admin & Admin API controllers */
-// Get all parcels
-const getAllParcels = async () => {  
-    const parcels = await Parcel.find({});
-    return parcels;
+
+// Track Parcel
+const trackParcel = async (trackingID: string) => {  
+    const parcelStatus = await Parcel.aggregate([
+        {
+            $match: {
+                trackingID: trackingID,
+            }
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'senderID',
+                foreignField: '_id',
+                as: 'senderDetails'
+            }
+        },
+        { $unwind: '$senderDetails' },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'receiverEmail',
+                foreignField: 'email',
+                as: 'receiverDetails'
+            }
+        },
+        { $unwind: '$receiverDetails' },
+        {
+            $project: {
+                _id: 0,
+                trackingID: 1,
+                senderName: '$senderDetails.name',
+                receiverName: '$receiverDetails.name',
+                weight: 1,
+                parcelType: '$type',
+                deliveryFee: '$fee',
+                statusHistory: '$statusLog'
+            }
+        },
+    ])
+    return parcelStatus; 
 };
 
  /* SENDER API services */
@@ -225,7 +260,16 @@ const getDeliveryHistory = async (receiverEmail: string, decodedToken: JwtPayloa
     return deliveries; 
 };
 
-/* Super Admin & Admin service */
+ /* Super Admin & Admin service */
+// Get all parcels
+const getAllParcels = async (parcelStatus: ParcelStatus) => {  
+    let filter = {}
+    if (parcelStatus) {
+        filter = {currentStatus: parcelStatus}
+    }
+    const parcels = await Parcel.find(filter);
+    return parcels;
+};
 // Change parcel status
 const changeParcelStatus = async (parcelId: string, parcelStatus: ParcelStatus, decodedToken: JwtPayload) => {  
     // Checking 
@@ -272,13 +316,14 @@ const approveParcel = async (parcelId: string, decodedToken: JwtPayload) => {
 };
 
 export const parcelServices = {
-    getAllParcels,
+    trackParcel,
     sendParcel,
     getParcelsBySender,
     cancelParcel,
     getReceiverParcels,
     parcelReceived,
     getDeliveryHistory,
+    getAllParcels,
     changeParcelStatus,
     approveParcel
 }

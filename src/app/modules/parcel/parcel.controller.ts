@@ -4,16 +4,18 @@ import { sendResponse } from "../../utils/sendResponse";
 import {StatusCodes} from 'http-status-codes';
 import { parcelServices } from "./parcel.service";
 import { JwtPayload } from "jsonwebtoken";
+import { ParcelStatus } from "./parcel.interface";
 
- /* Super Admin & Admin API controller */
-// Get all parcels
-const getAllParcels = catchAsync(async (req: Request, res: Response) => {
-    const allParcels = await parcelServices.getAllParcels();  
+// Track Parcel
+const trackParcel = catchAsync(async (req: Request, res: Response) => {
+    const { trackingID } = req.params;
+    const parcelStatus = await parcelServices.trackParcel(trackingID);  
+
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,     
-        message: "All Parcels Retrieved Successfully",
-        data: allParcels,
+        message: "Parcel Status Retrieved Successfully",
+        data: parcelStatus,
     })
 });
 
@@ -101,7 +103,18 @@ const getDeliveryHistory = catchAsync(async (req: Request, res: Response) => {
 });
 
 
- /* Super Admin & Admin API controller */
+  /* Super Admin & Admin API controller */
+ // Get all parcels
+const getAllParcels = catchAsync(async (req: Request, res: Response) => {
+    const { parcelStatus } = req.query;
+    const allParcels = await parcelServices.getAllParcels(parcelStatus as ParcelStatus);  
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,     
+        message: "All Parcels Retrieved Successfully",
+        data: allParcels,
+    })
+});
 // Change parcel status
 const changeParcelStatus = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user; 
@@ -132,13 +145,14 @@ const approveParcel = catchAsync(async (req: Request, res: Response) => {
 
 
 export const parcelController = {
-    getAllParcels,
+    trackParcel,
     sendParcel,
     getParcelsBySender,
     cancelParcel,
     getReceiverParcels,
     parcelReceived,
     getDeliveryHistory,
+    getAllParcels,
     changeParcelStatus,
     approveParcel
 };

@@ -7,6 +7,9 @@ import { Role } from "../user/user.interface";
 
 export const parcelRoutes = Router();
 
+/* Open route for all logged_in users */
+parcelRoutes.get('/track-parcel/:trackingID', checkAuth(Role.SUPER_ADMIN, Role.ADMIN, Role.SENDER, Role.RECEIVER), parcelController.trackParcel); // Get parcel status with tracking_Id
+
 /* Super Admin & Admin route */
 parcelRoutes.get('/all-parcels', checkAuth(Role.SUPER_ADMIN, Role.ADMIN), parcelController.getAllParcels); // Get all parcels
 

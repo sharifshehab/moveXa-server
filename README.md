@@ -162,9 +162,13 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 ## Admin API Routes:
 ### Get All Parcels:
     GET -/api/v1/parcel/all-parcels
+    OR
+    GET -/api/v1/parcel/all-parcels?parcelStatus=parcel_status (REQUESTED, CANCELLED, BLOCKED, DISPATCHED, IN_TRANSIT, DELIVERED)
 
 ### Get All Users:
     GET -/api/v1/user/all-users
+    OR
+    GET -/api/v1/user/all-users?role=user_role (Sender, Receiver)
 
 ### Change Parcel Status:
     PATCH -/api/v1/parcel/parcel-status/parcel_Id
@@ -188,6 +192,11 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 
 ### Approve Parcel:
     PATCH -/api/v1/approve-parcel/parcel_Id
+
+## Logged In Users API Route:
+### Track Parcel:
+    GET -/api/v1/track-parcel/tracking_Id
+
 
 
 ##  Live Link:

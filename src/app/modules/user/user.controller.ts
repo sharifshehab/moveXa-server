@@ -3,7 +3,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import {StatusCodes} from 'http-status-codes';
 import { userServices } from "./user.service";
-import { Status } from "./user.interface";
+import { Role, Status } from "./user.interface";
 import { JwtPayload } from "jsonwebtoken";
 
 
@@ -21,7 +21,8 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
  /* Super Admin & Admin controllers */
 // Get all users
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-    const allUsers = await userServices.getAllUsers();  
+    const { role } = req.query;
+    const allUsers = await userServices.getAllUsers(role as Role);  
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,     

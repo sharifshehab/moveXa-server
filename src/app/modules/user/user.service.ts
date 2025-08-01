@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { IUser, Role, Status } from "./user.interface";
@@ -27,8 +28,14 @@ const createUser = async (payload: IUser) => {
 
  /* Super Admin & Admin services */
 // Get all users 
-const getAllUsers = async () => {  
-    const users = await User.find({email: { $ne: "super@gmail.com" }}); // Exclude "Super Admin" data
+const getAllUsers = async (role: Role) => {  
+    const filter: any = {
+        email: { $ne: envVars.SUPER_ADMIN_EMAIL } // Exclude "Super Admin" data
+    };
+    if (role) {
+        filter.role = role;
+    }
+    const users = await User.find(filter); 
     return users;
 };
 // Change user status 
