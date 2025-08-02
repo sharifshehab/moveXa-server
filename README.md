@@ -27,7 +27,6 @@ MoveXa is a parcel delivery system that enables users to seamlessly send and rec
 - **Access and control all system operations via protected admin routes**
 
 
-
 Security & Access Control
 All routes are protected based on user roles (Sender, Receiver, Admin), ensuring secure access to authorized actions only.
 
@@ -101,6 +100,17 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
     - **JWT_REFRESH_EXPIRES=jwt_refresh_token_expire_time**
     - **EXPRESS_SESSION_SECRET=express_session_secret**
     - **BCRYPT_SALT_ROUND=salt_round_number**
+    - **SSL_STORE_ID=ssl_store_id**
+    - **SSL_STORE_PASS=ssl_store_password**
+    - **SSL_PAYMENT_API=ssl_session_api**
+    - **SSL_VALIDATION_API=ssl_web_service_validation_api**
+    - **SSL_IPN_URL=ssl_ipn_url**
+    - **SSL_SUCCESS_BACKEND_URL=ssl_success_backend_url**
+    - **SSL_FAIL_BACKEND_URL=ssl_fail_backend_url**
+    - **SSL_CANCEL_BACKEND_URL=ssl_cancel_backend_url**
+    - **SSL_SUCCESS_FRONTEND_URL=ssl_success_frontend_url**
+    - **SSL_FAIL_FRONTEND_URL=ssl_fail_frontend_url**
+    - **SSL_CANCEL_FRONTEND_URL=ssl_cancel_frontend_url**
     - **SUPER_ADMIN_EMAIL=super_admin_email**
     - **SUPER_ADMIN_PASSWORD=super_admin_password**
     - **FRONTEND_URL=front_end_url**
@@ -154,6 +164,9 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 
 ### Get All Parcels Sent By A Sender:
     GET -/api/v1/parcel/sender-parcels/sender_Id
+
+### Send Parcel:
+    GET -/api/v1/payment-link/link/parcel_Id
 
 ### Cancel Parcel:
     PATCH -/api/v1/parcel/cancel/parcel_Id

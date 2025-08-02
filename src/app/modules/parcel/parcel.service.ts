@@ -12,6 +12,8 @@ import { Role, Status } from "../user/user.interface";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
 import { PAYMENT_STATUS } from "../payment/payment.interface";
+import { PaymentLink } from "../paymentLink/paymentLink.model";
+import { IPaymentLink } from "../paymentLink/paymentLink.interface";
 
 
 // Track Parcel
@@ -109,6 +111,14 @@ const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }) 
         amount: fee,
     }
     const sslPayment = await SSLService.sslPaymentInit(sslPayload);
+
+    const paymentLinkPayload: IPaymentLink = {
+        parcelId: createParcel._id,
+        senderId: senderID,
+        paymentLink: sslPayment.GatewayPageURL
+    }
+
+    await PaymentLink.create(paymentLinkPayload); // create payment link
 
     return {
         paymentUrl: sslPayment.GatewayPageURL,

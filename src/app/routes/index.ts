@@ -4,6 +4,7 @@ import { parcelRoutes } from "../modules/parcel/parcel.route";
 import { deleteRoutes } from "../modules/deletetation/delete.route";
 import { AuthRoutes } from "../modules/auth/auth.route";
 import { PaymentRoutes } from "../modules/payment/payment.route";
+import { paymentLinkRoutes } from "../modules/paymentLink/paymentLink.route";
 
 export const routes = Router();
 
@@ -23,6 +24,10 @@ const moduleRoutes = [
     {
         path: "/payment",
         route: PaymentRoutes
+    },
+    {
+        path: "/payment-link",
+        route: paymentLinkRoutes
     },
     {
         path: "/delete",
