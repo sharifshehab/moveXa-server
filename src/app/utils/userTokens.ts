@@ -16,7 +16,6 @@ export const createUserTokens = (user: Partial<IUser>) => {
     }
     
     const accessToken = generateToken(jwtPayload, envVars.JWT_ACCESS_SECRET, envVars.JWT_ACCESS_EXPIRES);     // Calling the the token generator function, to create a access token
-    /* secrete_key and expire_time are saved on the ".env" file */
 
     const refreshToken = generateToken(jwtPayload, envVars.JWT_REFRESH_SECRET, envVars.JWT_REFRESH_EXPIRES) // Calling the the JWT token generator function, to create a refresh token
 

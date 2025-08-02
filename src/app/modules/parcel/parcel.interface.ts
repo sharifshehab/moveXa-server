@@ -37,5 +37,4 @@ export interface IParcel {
     isApproved: boolean;
     currentStatus: ParcelStatus;
     statusLog: IStatusLog[];
-    
 };

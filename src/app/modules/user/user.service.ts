@@ -76,6 +76,9 @@ const changeUserRole = async (userId: string, decodedToken: JwtPayload) => {
     if (user.status === Status.BLOCKED) { 
         throw new AppError(StatusCodes.BAD_REQUEST, `This user is ${Status.BLOCKED}`);   
     }
+    if (user.role === Role.SUPER_ADMIN) { 
+        throw new AppError(StatusCodes.BAD_REQUEST, `You cannot assign a super admin to an admin`);   
+    }
     if (user.role === Role.ADMIN) { 
         throw new AppError(StatusCodes.BAD_REQUEST, `This user is already ${Role.ADMIN}`);   
     }

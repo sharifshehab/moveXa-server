@@ -21,10 +21,6 @@ const paymentSchema = new Schema<IPayment>({
         type: String,
         enum: Object.values(PAYMENT_STATUS),
         default: PAYMENT_STATUS.UNPAID
-    },
-    paymentGatewayData: {
-        type: Schema.Types.Mixed,
-        default: {},
     }
 }, {
     versionKey: false,

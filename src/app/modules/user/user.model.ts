@@ -9,10 +9,10 @@ required: [true, 'Please provide user name'],
 },
 email: {
     type: String,         
-    required: true,     // Email is a required field
-    immutable: true,   // Once set, this field cannot be changed
-    unique: true,     // Email must be unique in the database
-    lowercase: true, // Converts email to lowercase before saving
+    required: true,     
+    immutable: true,  
+    unique: true,     
+    lowercase: true, 
 },
 password: {
     type: String,   

@@ -114,6 +114,7 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
     - **SUPER_ADMIN_EMAIL=super_admin_email**
     - **SUPER_ADMIN_PASSWORD=super_admin_password**
     - **FRONTEND_URL=front_end_url**
+    
 6. **After the installation is complete, start the application by typing <code>npm run dev</code> in terminal**
 
 - **You should now be able interact with the application on your local machine!**
@@ -165,7 +166,7 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 ### Get All Parcels Sent By A Sender:
     GET -/api/v1/parcel/sender-parcels/sender_Id
 
-### Send Parcel:
+### Get payment Url: (You will have to get the payment URL within a few minutes after the parcel is created; otherwise, the payment URL will not work)
     GET -/api/v1/payment-link/link/parcel_Id
 
 ### Cancel Parcel:

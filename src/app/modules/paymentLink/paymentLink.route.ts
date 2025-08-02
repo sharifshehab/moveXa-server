@@ -5,4 +5,5 @@ import { Role } from "../user/user.interface";
 
 export const paymentLinkRoutes = Router();
 
-paymentLinkRoutes.get('/link/:parcelId', checkAuth(Role.SENDER), paymentLinkController.getPaymentLink);  // Get payment link
+/* We will have to get the payment URL within a few minutes after the parcel is created; otherwise, the payment URL will not work */
+paymentLinkRoutes.get('/link/:parcelId', checkAuth(Role.SENDER), paymentLinkController.getPaymentLink);  // Get payment link 

@@ -7,13 +7,7 @@ import { SSLService } from "../sslCommerz/sslCommerz.service";
 
 
 const successPayment = catchAsync(async (req: Request, res: Response) => {
-    /* 
-        const query =  {
-                        transactionId: trackingID,
-                        parcelId: createParcel._id,
-                        amount: fee,
-            }
-    */
+
     const query = req.query
     const result = await PaymentService.successPayment(query as Record<string, string>)
 
@@ -45,7 +39,7 @@ const cancelPayment = catchAsync(async (req: Request, res: Response) => {
 
 const validatePayment = catchAsync(
     async (req: Request, res: Response) => {
-        console.log("sslcommerz ipn url body", req.body);
+        // console.log("sslcommerz ipn url body", req.body);
         await SSLService.validatePayment(req.body)
         sendResponse(res, {
             statusCode: 200,

@@ -11,8 +11,7 @@ try {
         console.log("Super Admin Already Exists!");
         return;
     }
-
-    // console.log("Trying to create Super Admin...");
+    console.log("Trying to create Super Admin...");
 
     const hashedPassword = await bcryptjs.hash(envVars.SUPER_ADMIN_PASSWORD, Number(envVars.BCRYPT_SALT_ROUND))
 

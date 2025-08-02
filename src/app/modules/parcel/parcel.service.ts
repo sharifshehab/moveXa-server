@@ -61,69 +61,66 @@ const trackParcel = async (trackingID: string) => {
  /* SENDER API services */
 // Send parcel to a user (i.e., user = RECEIVER)
 const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }) => {  
-    
-    const { senderID, senderAddress, receiverEmail, weight, insideDhaka } = payload;
-    if (!senderID) {
-        throw new AppError(StatusCodes.NOT_FOUND, "Sender Id is required");   
-    }
 
-    // Checking sender
-    const sender = await User.findById(senderID);
-    if (!sender) {
-        throw new AppError(StatusCodes.NOT_FOUND, "User not found");   
-    }
-    if (sender?.status === Status.BLOCKED) {
-        throw new AppError(StatusCodes.BAD_REQUEST, `User is blocked`);   
-    }
-    // Checking receiver 
-    const receiver = await User.findOne({email: receiverEmail});
-    if (!receiver) {
-        throw new AppError(StatusCodes.NOT_FOUND, "Receiver not found");   
-
-    }
-    if (receiver?.status === Status.BLOCKED) {
-        throw new AppError(StatusCodes.BAD_REQUEST, `Receiver is blocked`);   
-    }
-
-    // Generate tracking_Id
-    const trackingID = generateTrackingId();
-    // Calculate parcel fee
-    const fee = feeCalculator(weight as number, insideDhaka);
-    // Sender status log
-    const statusLog = {
-        status: ParcelStatus.REQUESTED,
-        timestamp: new Date(),
-        updatedBy: Types.ObjectId.createFromHexString(senderID.toString()) 
-    }
-    const createParcel = await Parcel.create({ ...payload, statusLog, fee, trackingID });
-
-    const parcel = await Parcel.findById(createParcel._id).populate("senderID", "name email")
-    const senderName = (parcel?.senderID as any).name
-    const senderEmail = (parcel?.senderID as any).email
+        const { senderID, senderAddress, receiverEmail, weight, insideDhaka } = payload;
+        if (!senderID) {
+            throw new AppError(StatusCodes.NOT_FOUND, "Sender Id is required");   
+        }
 
 
-    const sslPayload: ISSLCommerz = {
-        parcelId: createParcel._id,
-        transactionId: trackingID,
-        name: senderName,
-        email: senderEmail,
-        address: senderAddress as string,
-        amount: fee,
-    }
-    const sslPayment = await SSLService.sslPaymentInit(sslPayload);
+        // Checking sender
+        const sender = await User.findById(senderID);
+        if (!sender) {
+            throw new AppError(StatusCodes.NOT_FOUND, "User not found");   
+        }
+        if (sender?.status === Status.BLOCKED) {
+            throw new AppError(StatusCodes.BAD_REQUEST, `User is blocked`);   
+        }
+        // Checking receiver 
+        const receiver = await User.findOne({email: receiverEmail});
+        if (!receiver) {
+            throw new AppError(StatusCodes.NOT_FOUND, "Receiver not found");   
+        }
+        if (receiver?.status === Status.BLOCKED) {
+            throw new AppError(StatusCodes.BAD_REQUEST, `Receiver is blocked`);   
+        }
 
-    const paymentLinkPayload: IPaymentLink = {
-        parcelId: createParcel._id,
-        senderId: senderID,
-        paymentLink: sslPayment.GatewayPageURL
-    }
+        // Generate tracking_Id
+        const trackingID = generateTrackingId();
+        // Calculate parcel fee
+        const fee = feeCalculator(weight as number, insideDhaka);
+        // Sender status log
+        const statusLog = {
+            status: ParcelStatus.REQUESTED,
+            timestamp: new Date(),
+            updatedBy: Types.ObjectId.createFromHexString(senderID.toString()) 
+        }
+        const createParcel = await Parcel.create({ ...payload, statusLog, fee, trackingID } );
+        const parcel = await Parcel.findById(createParcel._id).populate("senderID", "name email");
+        const senderName = (parcel?.senderID as any).name
+        const senderEmail = (parcel?.senderID as any).email
 
-    await PaymentLink.create(paymentLinkPayload); // create payment link
+        const sslPayload: ISSLCommerz = {
+            parcelId: createParcel._id,
+            transactionId: trackingID,
+            name: senderName,
+            email: senderEmail,
+            address: senderAddress as string,
+            amount: fee,
+        }
+        const sslPayment = await SSLService.sslPaymentInit(sslPayload);
 
-    return {
-        paymentUrl: sslPayment.GatewayPageURL,
-        parcel: createParcel
-    }
+        const paymentLinkPayload: IPaymentLink = {
+            parcelId: createParcel._id,
+            senderId: senderID,
+            paymentLink: sslPayment.GatewayPageURL
+        }
+        await PaymentLink.create(paymentLinkPayload); // create payment link
+
+        return {
+            paymentUrl: sslPayment.GatewayPageURL,
+            parcel: createParcel
+        };
 };
 // Get all parcels send by a user (i.e., user = SENDER)
 const getParcelsBySender = async (senderId: string, decodedToken: JwtPayload) => {

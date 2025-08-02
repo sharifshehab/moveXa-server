@@ -4,20 +4,9 @@ import { StatusCodes } from "http-status-codes";
 import { envVars } from "../../config/env"
 import AppError from "../../errorHelpers/AppError"
 import { ISSLCommerz } from "./sslCommerz.interface"
-import { Payment } from "../payment/payment.model";
 
 const sslPaymentInit = async (payload: ISSLCommerz) => {
-    /* 
-            const payload = {
-                parcelId: createParcel._id,
-                transactionId: trackingID,
-                name: senderName,
-                email: senderEmail,
-                address: senderAddress as string,
-                amount: fee,
-            }
-    */
-    
+
     try {
         const data = {
             store_id: envVars.SSL.STORE_ID,
@@ -67,17 +56,11 @@ const sslPaymentInit = async (payload: ISSLCommerz) => {
 
 const validatePayment = async (payload: any) => {
     try {
-        const response = await axios({
+        await axios({
             method: "GET",
             url: `${envVars.SSL.SSL_VALIDATION_API}?val_id=${payload.val_id}&store_id=${envVars.SSL.STORE_ID}&store_passwd=${envVars.SSL.STORE_PASS}`
         })
-
-        console.log("validate api response", response.data);
-
-        await Payment.updateOne(
-            { transactionId: payload.tran_id },
-            { paymentGatewayData: response.data },
-            { runValidators: true })
+        // console.log("validate api response", response.data);
     } catch (error: any) {
         console.log(error);
         throw new AppError(401, `Payment Validation Error, ${error.message}`)

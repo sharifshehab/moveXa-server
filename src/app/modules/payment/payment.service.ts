@@ -3,22 +3,13 @@ import { PAYMENT_STATUS } from "./payment.interface";
 import { Payment } from "./payment.model";
 import { Parcel } from "../parcel/parcel.model";
 
-
-    /* 
-        const query =  {
-                        transactionId: trackingID,
-                        parcelId: createParcel._id,
-                        amount: fee,
-            }
-    */
-
 const successPayment = async (query: Record<string, string>) => {
     const session = await Parcel.startSession();
     session.startTransaction()
 
     try {
         const payload = { ...query, status: PAYMENT_STATUS.PAID }
-        const createPayment = await Payment.create(payload)
+        const [createPayment] = await Payment.create([payload], { session })
         if (!createPayment) {
             throw new AppError(401, "Payment not found")
         }
@@ -41,7 +32,7 @@ const failPayment = async (query: Record<string, string>) => {
 
     try {
         const payload = { ...query, status: PAYMENT_STATUS.FAILED }
-        const createPayment = await Payment.create(payload)
+        const [createPayment] = await Payment.create([payload], { session })
         if (!createPayment) {
             throw new AppError(401, "Payment not found")
         }
@@ -64,7 +55,7 @@ const cancelPayment = async (query: Record<string, string>) => {
 
     try {
         const payload = { ...query, status: PAYMENT_STATUS.CANCELLED }
-        const createPayment = await Payment.create(payload)
+        const [createPayment] = await Payment.create([payload], { session })
         if (!createPayment) {
             throw new AppError(401, "Payment not found")
         }
