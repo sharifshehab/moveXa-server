@@ -122,6 +122,9 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 
 ## Public API Routes:
 ### Register User:
+
+A user can register as a "Sender" or as a "Receiver", but a user cannot set the role as an "Admin". Only Super Admin can Assign Admin role to a user.
+
     POST -/api/v1/user/register
 
  > > Body Data:
@@ -133,6 +136,9 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 }
 
 ### Log In User:
+
+User can log in to the application using their registration credentials.
+
     POST -/api/v1/auth/login
 
  > > Body Data:
@@ -141,15 +147,26 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
         "password": "user password",
 }
 
-### Get Refresh Token:
+### Get Refresh Token:## Description
+
+With this endpoint, a new access token will be generated for the user if the refresh token is valid.
+
     POST -/api/v1/auth/refresh-token
 
-### Log Out User:
+### Log Out User:## Description
+
+Log out a user and remove the tokens from the cookie.
+
     POST -/api/v1/auth/logout
 
 
 ## Sender API Routes:
+
+
 ### Send Parcel:
+
+Only the "Sender" user can send parcel using this endpoint.
+
     POST -/api/v1/parcel/send-parcel
 
  > > Body Data:
@@ -164,20 +181,36 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 }
 
 ### Get All Parcels Sent By A Sender:
+
+The "Sender" user can see all his parcels using this endpoint.
+
     GET -/api/v1/parcel/sender-parcels/sender_Id
 
-### Get payment Url: (You will have to get the payment URL within a few minutes after the parcel is created; otherwise, the payment URL will not work)
+### Get payment Url: ( You will have to get the payment URL within a few minutes after the parcel is created; otherwise, the payment URL will not work )
+
+The "Sender" user can get the payment URL for his parcel using this endpoint.
+
+
     GET -/api/v1/payment-link/link/parcel_Id
 
 ### Cancel Parcel:
+
+The "Sender" user can cancel his parcel, if it's not already dispatched.
+
     PATCH -/api/v1/parcel/cancel/parcel_Id
 
 
 ## Receiver API Routes:
 ### Get All Parcels Sent For A Receiver:
+
+The "Receiver " user can see all his parcels using this endpoint.
+
     GET -/api/v1/parcel/receiver-parcels/receiver_Email
 
 ### Receive Parcel:
+
+The "Receiver " user can receive his parcel if parcel status is delivered.
+
     PATCH -/api/v1/parcel/parcel-received/parcel_Id
 
 > > Body Data:
@@ -186,21 +219,33 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 }
 
 ### Parcel Delivery History:
+
+The "Receiver " user can see all his parcel delivery history using this endpoint.
+
     GET -/api/v1/parcel/delivery-history/receiver_Email
 
 
 ## Admin API Routes:
 ### Get All Parcels:
+
+The "Super Admin" and the "Admin"  can see all parcels using this endpoint with filter option.
+
     GET -/api/v1/parcel/all-parcels
     OR
     GET -/api/v1/parcel/all-parcels?parcelStatus=parcel_status (REQUESTED, CANCELLED, BLOCKED, DISPATCHED, IN_TRANSIT, DELIVERED)
 
 ### Get All Users:
+
+The "Super Admin" and the "Admin"  can see all users using this endpoint with filter option.
+
     GET -/api/v1/user/all-users
     OR
     GET -/api/v1/user/all-users?role=user_role (Sender, Receiver)
 
 ### Change Parcel Status:
+
+The "Super Admin" and the "Admin"  can change a parcel's status using this endpoint.
+
     PATCH -/api/v1/parcel/parcel-status/parcel_Id
 
 > > Body Data:
@@ -209,6 +254,9 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 }
 
 ### Change User Status:
+
+The "Super Admin" and the "Admin"  can change a user's status using this endpoint.
+
     PATCH -/api/v1/user/change-status/user_Id
 
 > > Body Data:
@@ -217,10 +265,15 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 }
 
 ## Super Admin API Routes:
+
+Only the "Super Admin"  can assign a user an Admin" role using this endpoint.
 ### Assign Admin:
     PATCH -/api/v1/user/assign-admin/user_Id
 
 ### Approve Parcel:
+
+Only the "Super Admin"  can approve a parcel if it's payment is complete.
+
     PATCH -/api/v1/approve-parcel/parcel_Id
 
 ## Logged In Users API Route:
