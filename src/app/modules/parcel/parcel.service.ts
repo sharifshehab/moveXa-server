@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { IParcel, ParcelStatus } from "./parcel.interface";
@@ -8,6 +9,9 @@ import { feeCalculator } from "../../utils/feeCalculator";
 import { Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 import { Role, Status } from "../user/user.interface";
+import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
+import { SSLService } from "../sslCommerz/sslCommerz.service";
+import { PAYMENT_STATUS } from "../payment/payment.interface";
 
 
 // Track Parcel
@@ -56,7 +60,7 @@ const trackParcel = async (trackingID: string) => {
 // Send parcel to a user (i.e., user = RECEIVER)
 const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }) => {  
     
-    const { senderID, receiverEmail, weight, insideDhaka } = payload;
+    const { senderID, senderAddress, receiverEmail, weight, insideDhaka } = payload;
     if (!senderID) {
         throw new AppError(StatusCodes.NOT_FOUND, "Sender Id is required");   
     }
@@ -89,8 +93,27 @@ const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }) 
         timestamp: new Date(),
         updatedBy: Types.ObjectId.createFromHexString(senderID.toString()) 
     }
-    const parcel = await Parcel.create({ ...payload, statusLog, fee, trackingID });
-    return parcel;
+    const createParcel = await Parcel.create({ ...payload, statusLog, fee, trackingID });
+
+    const parcel = await Parcel.findById(createParcel._id).populate("senderID", "name email")
+    const senderName = (parcel?.senderID as any).name
+    const senderEmail = (parcel?.senderID as any).email
+
+
+    const sslPayload: ISSLCommerz = {
+        parcelId: createParcel._id,
+        transactionId: trackingID,
+        name: senderName,
+        email: senderEmail,
+        address: senderAddress as string,
+        amount: fee,
+    }
+    const sslPayment = await SSLService.sslPaymentInit(sslPayload);
+
+    return {
+        paymentUrl: sslPayment.GatewayPageURL,
+        parcel: createParcel
+    }
 };
 // Get all parcels send by a user (i.e., user = SENDER)
 const getParcelsBySender = async (senderId: string, decodedToken: JwtPayload) => {
@@ -308,6 +331,9 @@ const approveParcel = async (parcelId: string, decodedToken: JwtPayload) => {
     const parcel = await Parcel.findById(parcelId);
     if (!parcel) { 
         throw new AppError(StatusCodes.NOT_FOUND, "Parcel not found");   
+    }
+    if (parcel.payment !== PAYMENT_STATUS.PAID) { 
+        throw new AppError(StatusCodes.NOT_FOUND, `Payment ${parcel.payment}`);   
     }
 
     parcel.isApproved = true;

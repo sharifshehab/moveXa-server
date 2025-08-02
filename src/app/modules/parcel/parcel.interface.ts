@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { PAYMENT_STATUS } from "../payment/payment.interface";
 
 export enum ParcelStatus {
     REQUESTED = "REQUESTED",
@@ -32,7 +33,8 @@ export interface IParcel {
     weight: number;
     type: ParcelType;
     fee: number;
-    isApproved: boolean
+    payment: PAYMENT_STATUS;
+    isApproved: boolean;
     currentStatus: ParcelStatus;
     statusLog: IStatusLog[];
     

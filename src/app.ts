@@ -14,12 +14,13 @@ dotenv.config();
 const app: Application = express();
 
 app.set("trust proxy", 1);
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(cors({
     origin: envVars.FRONTEND_URL,
     credentials: true
 }))
-app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
 app.use(expressSession({
         secret: envVars.EXPRESS_SESSION_SECRET,  
         resave: false,                          

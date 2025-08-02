@@ -109,6 +109,7 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
 - **You should now be able interact with the application on your local machine!**
 
 
+## Public API Routes:
 ### Register User:
     POST -/api/v1/user/register
 
@@ -119,6 +120,21 @@ All routes are protected based on user roles (Sender, Receiver, Admin), ensuring
         "password": "user password",
         "role": "Sender/Receiver"
 }
+
+### Log In User:
+    POST -/api/v1/auth/login
+
+ > > Body Data:
+ {
+        "email": "example@gmail.com",
+        "password": "user password",
+}
+
+### Get Refresh Token:
+    POST -/api/v1/auth/refresh-token
+
+### Log Out User:
+    POST -/api/v1/auth/logout
 
 
 ## Sender API Routes:
