@@ -5,6 +5,7 @@ import { Payment } from "./payment.model";
 import { Parcel } from "../parcel/parcel.model";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
+import { ParcelStatus } from "../parcel/parcel.interface";
 
 const successPayment = async (query: Record<string, string>) => {
     const session = await Parcel.startSession();
@@ -81,6 +82,13 @@ const initPayment = async (parcelID: string) => {
     if (!parcel) {
         throw new AppError(401, "Parcel Not Found.");
     }
+    if (parcel.currentStatus === ParcelStatus.BLOCKED) {
+        throw new AppError(401, "Parcel Is Blocked.");
+    }
+    if (parcel.currentStatus === ParcelStatus.CANCELLED) {
+        throw new AppError(401, "Parcel Is Cancelled.");
+    }
+
     const senderName = (parcel?.senderID as any).name
     const senderEmail = (parcel?.senderID as any).email
 

@@ -3,7 +3,7 @@ import { userRoutes } from "../modules/user/user.route";
 import { parcelRoutes } from "../modules/parcel/parcel.route";
 import { AuthRoutes } from "../modules/auth/auth.route";
 import { PaymentRoutes } from "../modules/payment/payment.route";
-import { paymentLinkRoutes } from "../modules/paymentLink/paymentLink.route";
+import { statsRoutes } from "../modules/stats/stats.route";
 
 export const routes = Router();
 
@@ -25,9 +25,9 @@ const moduleRoutes = [
         route: PaymentRoutes
     },
     {
-        path: "/payment-link",
-        route: paymentLinkRoutes
-    }
+        path: "/stats",
+        route: statsRoutes
+    },
 ]
 
 moduleRoutes.forEach((route) => {

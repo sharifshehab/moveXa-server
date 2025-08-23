@@ -9,12 +9,7 @@ import { feeCalculator } from "../../utils/feeCalculator";
 import { Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 import { Role, Status } from "../user/user.interface";
-import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
-import { SSLService } from "../sslCommerz/sslCommerz.service";
 import { PAYMENT_STATUS } from "../payment/payment.interface";
-import { PaymentLink } from "../paymentLink/paymentLink.model";
-import { IPaymentLink } from "../paymentLink/paymentLink.interface";
-
 
 // Track Parcel
 const trackParcel = async (trackingID: string) => {
@@ -288,7 +283,10 @@ const changeParcelStatus = async (parcelId: string, parcelStatus: ParcelStatus, 
         throw new AppError(StatusCodes.BAD_REQUEST, `Parcel is not approved yet.`);
     }
     if ([ParcelStatus.RECEIVED, ParcelStatus.RETURNED].includes(parcelStatus)) {
-        throw new AppError(StatusCodes.BAD_REQUEST, `You cannot assign ${parcelStatus} status for the Parcel`);
+        throw new AppError(StatusCodes.BAD_REQUEST, `You cannot assign ${parcelStatus} status for the parcel`);
+    }
+    if (parcel.currentStatus === ParcelStatus.RECEIVED || parcel.currentStatus === ParcelStatus.RETURNED) {
+        throw new AppError(StatusCodes.BAD_REQUEST, `You cannot change status of this parcel`);
     }
     if (parcel.currentStatus === parcelStatus) {
         throw new AppError(StatusCodes.BAD_REQUEST, `Parcel status is already ${parcelStatus}`);
