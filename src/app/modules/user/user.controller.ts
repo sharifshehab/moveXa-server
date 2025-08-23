@@ -30,6 +30,17 @@ const getAllUsers = catchAsync(async (req: Request, res: Response) => {
         data: allUsers,
     })
 });
+// Get user
+const getUser = catchAsync(async (req: Request, res: Response) => {
+    const decodedToken = req.user; 
+    const allUsers = await userServices.getUser(decodedToken as JwtPayload);  
+    sendResponse(res, {
+        success: true,
+        statusCode: StatusCodes.OK,     
+        message: "User info Retrieved Successfully",
+        data: allUsers,
+    })
+});
 // Change user status
 const changeUserStatus = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user; 
@@ -62,6 +73,7 @@ const changeUserRole = catchAsync(async (req: Request, res: Response) => {
 export const userController = {
     createUser,
     getAllUsers,
+    getUser,
     changeUserStatus,
     changeUserRole
 };

@@ -7,4 +7,5 @@ export const PaymentRoutes = express.Router();
 PaymentRoutes.post("/success", PaymentController.successPayment);
 PaymentRoutes.post("/fail", PaymentController.failPayment);
 PaymentRoutes.post("/cancel", PaymentController.cancelPayment);
+PaymentRoutes.post("/init-payment/:parcelID", PaymentController.initPayment);
 PaymentRoutes.post("/validate-payment", PaymentController.validatePayment);

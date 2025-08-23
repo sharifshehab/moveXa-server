@@ -36,6 +36,17 @@ const cancelPayment = catchAsync(async (req: Request, res: Response) => {
     }
 });
 
+const initPayment = catchAsync(async (req: Request, res: Response) => {
+    const parcelID = req.params.parcelID;
+    const result = await PaymentService.initPayment(parcelID as string)
+    sendResponse(res, {
+        statusCode: 201,
+        success: true,
+        message: "Payment URL generated successfully",
+        data: result,
+    });
+});
+
 
 const validatePayment = catchAsync(
     async (req: Request, res: Response) => {
@@ -54,5 +65,6 @@ export const PaymentController = {
     successPayment,
     failPayment,
     cancelPayment,
+    initPayment,
     validatePayment
 };

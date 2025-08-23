@@ -9,6 +9,7 @@ export const userRoutes = Router();
 
 userRoutes.post('/register', validateRequest(createUserZodSchema), userController.createUser);  // Create user
 
+userRoutes.get('/me', checkAuth(...Object.values(Role)), userController.getUser);  // Get user
 /* Super Admin & Admin routes */
 userRoutes.get('/all-users', checkAuth(Role.SUPER_ADMIN, Role.ADMIN), userController.getAllUsers);  // Get all users
 userRoutes.patch('/change-status/:userId', checkAuth(Role.SUPER_ADMIN, Role.ADMIN), userController.changeUserStatus); // Change user status

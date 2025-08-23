@@ -10,12 +10,12 @@ import { envVars } from "../config/env";
 export const checkAuth = (...authRoles: string[]) => async (req: Request, res: Response, next: NextFunction) => {
 
     try {
-        const accessToken = req.headers.authorization; // Receiving the token from the client-side
+        const accessToken = req.headers.authorization || req.cookies.accessToken; // Receiving the token from the client-side
 
         if (!accessToken) {
             throw new AppError(403, "No Token Received")
         }
-        
+
         // Calling token verifying function
         const verifiedToken = verifyToken(accessToken, envVars.JWT_ACCESS_SECRET) as JwtPayload
 

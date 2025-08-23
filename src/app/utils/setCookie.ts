@@ -12,18 +12,18 @@ export const setAuthCookie = (res: Response, tokenInfo: AuthTokens) => {
     if (tokenInfo.accessToken) {
         res.cookie("accessToken", tokenInfo.accessToken, {
             httpOnly: true,
-            // secure: false, 
-            secure: process.env.NODE_ENV === 'production', 
+            secure: true,
+            // secure: process.env.NODE_ENV === 'production', 
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
         })
     }
-    
+
     // save the "Refresh Token" on client-side in the "cookies"
     if (tokenInfo.refreshToken) {
         res.cookie("refreshToken", tokenInfo.refreshToken, {
             httpOnly: true,
-            // secure: false, 
-            secure: process.env.NODE_ENV === 'production', 
+            secure: true,
+            // secure: process.env.NODE_ENV === 'production', 
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
         })
     }

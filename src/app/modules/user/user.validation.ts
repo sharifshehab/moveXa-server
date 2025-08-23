@@ -7,7 +7,7 @@ export const createUserZodSchema = z.object({
         .max(50, { message: "Name cannot exceed 50 characters." }),
     email: z.email(),
     password: z.string()
-            .min(8, { message: "Password must be at least 8 characters long." }),
+        .min(8, { message: "Password must be at least 8 characters long." }),
     role: z.enum(Role),
 });
 
