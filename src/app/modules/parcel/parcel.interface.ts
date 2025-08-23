@@ -22,6 +22,7 @@ export interface IStatusLog {
     status: ParcelStatus;
     timestamp: Date;
     updatedBy: Types.ObjectId;
+    note: string;
 }
 
 export interface IParcel {

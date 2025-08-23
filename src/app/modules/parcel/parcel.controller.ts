@@ -35,7 +35,8 @@ const sendParcel = catchAsync(async (req: Request, res: Response) => {
 const getParcelsBySender = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user;
     const { senderId } = req.params;
-    const parcels = await parcelServices.getParcelsBySender(senderId, decodedToken as JwtPayload);
+    const query = req.query;
+    const parcels = await parcelServices.getParcelsBySender(senderId, decodedToken as JwtPayload, query as Record<string, string>);
 
     sendResponse(res, {
         success: true,

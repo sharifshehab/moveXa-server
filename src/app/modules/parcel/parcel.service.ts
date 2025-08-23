@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
 import { IParcel, ParcelStatus } from "./parcel.interface";
@@ -10,6 +9,8 @@ import { Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 import { Role, Status } from "../user/user.interface";
 import { PAYMENT_STATUS } from "../payment/payment.interface";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { parcelSearchableFields } from "./parcel.constant";
 
 // Track Parcel
 const trackParcel = async (trackingID: string) => {
@@ -88,14 +89,15 @@ const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }) 
     const statusLog = {
         status: ParcelStatus.REQUESTED,
         timestamp: new Date(),
-        updatedBy: Types.ObjectId.createFromHexString(senderID.toString())
+        updatedBy: Types.ObjectId.createFromHexString(senderID.toString()),
+        note: 'Sender created a parcel'
     }
     const parcel = await Parcel.create({ ...payload, statusLog, fee, trackingID });
 
     return parcel;
 };
 // Get all parcels send by a user (i.e., user = SENDER)
-const getParcelsBySender = async (senderId: string, decodedToken: JwtPayload) => {
+const getParcelsBySender = async (senderId: string, decodedToken: JwtPayload, query: Record<string, string>) => {
 
     // Checking
     const user = await User.findById(senderId);
@@ -109,8 +111,26 @@ const getParcelsBySender = async (senderId: string, decodedToken: JwtPayload) =>
         throw new AppError(StatusCodes.BAD_REQUEST, `User is blocked`);
     }
 
-    const parcels = await Parcel.find({ senderID: senderId });
-    return parcels;
+    const queryBuilder = new QueryBuilder(Parcel.find({ senderID: senderId }), query);
+    // const parcels = await queryBuilder.build();
+
+    const parcels = queryBuilder
+        .filter()
+        .search(parcelSearchableFields)
+        .sort()
+        .paginate();
+
+    const [data, meta] = await Promise.all([
+        parcels.build(),
+        queryBuilder.getMeta()
+    ])
+
+
+    // const parcels = await Parcel.find({ senderID: senderId });
+    return {
+        data,
+        meta
+    };
 };
 // Cancel Parcel 
 const cancelParcel = async (parcelId: string, decodedToken: JwtPayload) => {
@@ -137,12 +157,12 @@ const cancelParcel = async (parcelId: string, decodedToken: JwtPayload) => {
     parcel.statusLog.push({
         status: ParcelStatus.CANCELLED,
         timestamp: new Date(),
-        updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString())
+        updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString()),
+        note: 'Parcel is cancelled'
     });
     await parcel.save();
     return parcel;
 };
-
 
 /* RECEIVER API services */
 // Get all parcels send for a receiver 
@@ -192,7 +212,8 @@ const parcelReceived = async (parcelId: string, receiveParcel: boolean, decodedT
             parcel.statusLog.push({
                 status: ParcelStatus.RECEIVED,
                 timestamp: new Date(),
-                updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString())
+                updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString()),
+                note: 'Parcel received by the user'
             });
             await parcel.save();
             return parcel;
@@ -201,7 +222,8 @@ const parcelReceived = async (parcelId: string, receiveParcel: boolean, decodedT
             parcel.statusLog.push({
                 status: ParcelStatus.RETURNED,
                 timestamp: new Date(),
-                updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString())
+                updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString()),
+                note: 'Parcel returned by the user'
             });
             await parcel.save();
             return parcel;
@@ -292,11 +314,12 @@ const changeParcelStatus = async (parcelId: string, parcelStatus: ParcelStatus, 
         throw new AppError(StatusCodes.BAD_REQUEST, `Parcel status is already ${parcelStatus}`);
     }
 
-    parcel.currentStatus = parcelStatus;
+    parcel.currentStatus = parcelStatus; // Update the parcel current status
     parcel.statusLog.push({
         status: parcelStatus,
         timestamp: new Date(),
-        updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString())
+        updatedBy: Types.ObjectId.createFromHexString(decodedToken.userId.toString()),
+        note: `Parcel is ${parcelStatus}`
     });
 
     await parcel.save()
