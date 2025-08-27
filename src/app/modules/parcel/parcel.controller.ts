@@ -4,7 +4,6 @@ import { sendResponse } from "../../utils/sendResponse";
 import { StatusCodes } from 'http-status-codes';
 import { parcelServices } from "./parcel.service";
 import { JwtPayload } from "jsonwebtoken";
-import { ParcelStatus } from "./parcel.interface";
 
 // Track Parcel
 const trackParcel = catchAsync(async (req: Request, res: Response) => {
@@ -66,7 +65,8 @@ const cancelParcel = catchAsync(async (req: Request, res: Response) => {
 const getReceiverParcels = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user;
     const { receiverEmail } = req.params;
-    const parcels = await parcelServices.getReceiverParcels(receiverEmail, decodedToken as JwtPayload);
+    const query = req.query;
+    const parcels = await parcelServices.getReceiverParcels(receiverEmail, decodedToken as JwtPayload, query as Record<string, string>);
 
     sendResponse(res, {
         success: true,
@@ -85,7 +85,7 @@ const parcelReceived = catchAsync(async (req: Request, res: Response) => {
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.CREATED,
-        message: parcel ? (parcel.currentStatus !== "RETURNED" ? "Parcel Received Successfully" : "Parcel Returned Successfully") : "Parcel hasn't been delivered yet.",
+        message: parcel?.currentStatus === "RECEIVED" ? "Parcel Received Successfully" : "Parcel Returned Successfully",
         data: parcel,
     })
 });
@@ -93,6 +93,7 @@ const parcelReceived = catchAsync(async (req: Request, res: Response) => {
 const getDeliveryHistory = catchAsync(async (req: Request, res: Response) => {
     const decodedToken = req.user;
     const { receiverEmail } = req.params;
+    // const { page } = req.query;
     const deliveries = await parcelServices.getDeliveryHistory(receiverEmail, decodedToken as JwtPayload);
 
     sendResponse(res, {
@@ -107,8 +108,8 @@ const getDeliveryHistory = catchAsync(async (req: Request, res: Response) => {
 /* Super Admin & Admin API controller */
 // Get all parcels
 const getAllParcels = catchAsync(async (req: Request, res: Response) => {
-    const { parcelStatus } = req.query;
-    const allParcels = await parcelServices.getAllParcels(parcelStatus as ParcelStatus);
+    const query = req.query;
+    const allParcels = await parcelServices.getAllParcels(query as Record<string, string>);
     sendResponse(res, {
         success: true,
         statusCode: StatusCodes.OK,

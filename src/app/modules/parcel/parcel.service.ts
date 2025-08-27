@@ -44,6 +44,7 @@ const trackParcel = async (trackingID: string) => {
                 trackingID: 1,
                 senderName: '$senderDetails.name',
                 receiverName: '$receiverDetails.name',
+                currentStatus: '$currentStatus',
                 weight: 1,
                 parcelType: '$type',
                 deliveryFee: '$fee',
@@ -62,7 +63,6 @@ const sendParcel = async (payload: Partial<IParcel> & { insideDhaka: boolean }) 
     if (!senderID) {
         throw new AppError(StatusCodes.NOT_FOUND, "Sender Id is required");
     }
-
 
     // Checking sender
     const sender = await User.findById(senderID);
@@ -112,23 +112,20 @@ const getParcelsBySender = async (senderId: string, decodedToken: JwtPayload, qu
     }
 
     const queryBuilder = new QueryBuilder(Parcel.find({ senderID: senderId }), query);
-    // const parcels = await queryBuilder.build();
 
-    const parcels = queryBuilder
+    const data = queryBuilder
         .filter()
         .search(parcelSearchableFields)
         .sort()
         .paginate();
 
-    const [data, meta] = await Promise.all([
-        parcels.build(),
+    const [parcels, meta] = await Promise.all([
+        data.build(),
         queryBuilder.getMeta()
     ])
 
-
-    // const parcels = await Parcel.find({ senderID: senderId });
     return {
-        data,
+        parcels,
         meta
     };
 };
@@ -166,7 +163,7 @@ const cancelParcel = async (parcelId: string, decodedToken: JwtPayload) => {
 
 /* RECEIVER API services */
 // Get all parcels send for a receiver 
-const getReceiverParcels = async (receiverEmail: string, decodedToken: JwtPayload) => {
+const getReceiverParcels = async (receiverEmail: string, decodedToken: JwtPayload, query: Record<string, string>) => {
 
     const receiver = await User.findOne({ email: receiverEmail });
     if (!receiver) {
@@ -179,8 +176,24 @@ const getReceiverParcels = async (receiverEmail: string, decodedToken: JwtPayloa
         throw new AppError(StatusCodes.BAD_REQUEST, "Receiver is blocked");
     }
 
-    const parcels = await Parcel.find({ receiverEmail });
-    return parcels;
+    const queryBuilder = new QueryBuilder(Parcel.find({ receiverEmail }), query);
+
+    const data = queryBuilder
+        .filter()
+        .search(parcelSearchableFields)
+        .sort()
+        .paginate();
+
+    const [parcels, meta] = await Promise.all([
+        data.build(),
+        queryBuilder.getMeta()
+    ])
+
+    // const parcels = await Parcel.find({ receiverEmail });
+    return {
+        parcels,
+        meta
+    };
 };
 // Confirm parcel received by the user (i.e., user = RECEIVER)
 const parcelReceived = async (parcelId: string, receiveParcel: boolean, decodedToken: JwtPayload) => {
@@ -202,9 +215,16 @@ const parcelReceived = async (parcelId: string, receiveParcel: boolean, decodedT
     if (parcel.currentStatus === ParcelStatus.CANCELLED) {
         throw new AppError(StatusCodes.BAD_REQUEST, "Parcel was cancelled");
     }
-    if (parcel.currentStatus === ParcelStatus.RECEIVED) {
-        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel has already been received");
+    if ([ParcelStatus.RECEIVED, ParcelStatus.RETURNED].includes(parcel.currentStatus)) {
+        throw new AppError(StatusCodes.BAD_REQUEST, `Parcel has already been ${parcel.currentStatus}`);
     }
+    if (parcel.currentStatus !== ParcelStatus.DELIVERED) {
+        throw new AppError(StatusCodes.BAD_REQUEST, "Parcel hasn't been delivered yet.");
+    }
+    // if (parcel.currentStatus === ParcelStatus.RECEIVED) {
+    //     throw new AppError(StatusCodes.BAD_REQUEST, "Parcel has already been received");
+    // }
+
 
     if (parcel.currentStatus === "DELIVERED") {
         if (receiveParcel) {
@@ -274,25 +294,47 @@ const getDeliveryHistory = async (receiverEmail: string, decodedToken: JwtPayloa
                 receiverEmail: '$receiverDetails.email',
                 sendFrom: '$senderAddress',
                 receivedFrom: '$receiverAddress',
+                currentStatus: '$currentStatus',
                 weight: 1,
                 parcelType: '$type',
                 deliveryFee: '$fee',
                 statusHistory: '$statusLog'
             }
         },
+        // { $skip: (page-1) * 10 }
+        // { $limit: 10 }
+
+
     ])
     return deliveries;
 };
 
 /* Super Admin & Admin service */
 // Get all parcels
-const getAllParcels = async (parcelStatus: ParcelStatus) => {
-    let filter = {}
-    if (parcelStatus) {
-        filter = { currentStatus: parcelStatus }
-    }
-    const parcels = await Parcel.find(filter);
-    return parcels;
+const getAllParcels = async (query: Record<string, string>) => {
+    const queryBuilder = new QueryBuilder(Parcel.find(), query);
+
+    const data = queryBuilder
+        .filter()
+        .search(parcelSearchableFields)
+        .sort()
+        .paginate();
+
+    const [parcels, meta] = await Promise.all([
+        data.build(),
+        queryBuilder.getMeta()
+    ])
+
+    return {
+        parcels,
+        meta
+    };
+    // let filter = {}
+    // if (parcelStatus) {
+    //     filter = { currentStatus: parcelStatus }
+    // }
+    // const parcels = await Parcel.find(filter);
+    // return parcels;
 };
 // Change parcel status
 const changeParcelStatus = async (parcelId: string, parcelStatus: ParcelStatus, decodedToken: JwtPayload) => {

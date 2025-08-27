@@ -4,20 +4,22 @@ MoveXa is a parcel delivery system that enables users to seamlessly send and rec
 
 
 #### Sender:
-- **Register and log in**
+- **Register as a Sender and Login**
 
 - **Send parcels to registered receivers**
 
-- **View all parcels sent**
+- **View all parcels sent by a sender**
 
 - **Cancel parcels if needed**
 
 #### Receiver:
-- **View all parcels sent to them**
+- **Register as a Receiver and Login**
 
-- **Confirm parcel delivery (mark as received)**
+- **View all parcels sent to a receiver**
 
-- **View their parcel delivery history**
+- **Confirm parcel delivery or return parcel (mark as received or returned)**
+
+- **View receiver parcel delivery history**
 
 #### Admin:
 - **Manage user status (e.g., block/unblock users)**
@@ -159,6 +161,17 @@ Log out a user and remove the tokens from the cookie.
 
     POST -/api/v1/auth/logout
 
+### Track Parcel:
+
+See the parcel status.
+
+    POST -/api/v1/parcel/track-parcel/Tracking_Id
+
+### User data:
+
+A logged in user can see his data with this endpoint.
+
+    POST -/api/v1/user/me
 
 ## Sender API Routes:
 
@@ -180,18 +193,18 @@ Only the "Sender" user can send parcel using this endpoint.
   "type": "DOCUMENT/FRAGILE/CLOTHING/OTHER"
 }
 
-### Get All Parcels Sent By A Sender:
+### Get All The Parcels Sent By A User (i,e: Sender):
 
 The "Sender" user can see all his parcels using this endpoint.
 
     GET -/api/v1/parcel/sender-parcels/sender_Id
 
-### Get payment Url: ( You will have to get the payment URL within a few minutes after the parcel is created; otherwise, the payment URL will not work )
+### Get payment Url: 
 
 The "Sender" user can get the payment URL for his parcel using this endpoint.
 
 
-    GET -/api/v1/payment-link/link/parcel_Id
+    GET -/api/v1/payment/init-payment/parcel_Id
 
 ### Cancel Parcel:
 
