@@ -76,7 +76,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
         httpOnly: true,
         // secure: false,
         secure: process.env.NODE_ENV === 'production', 
-        sameSite: "lax"
+        sameSite: "none"
     });
 
     // Remove "Refresh Token" from the client-side cookie
@@ -85,7 +85,7 @@ const logout = catchAsync(async (req: Request, res: Response) => {
         httpOnly: true,
         // secure: false,
         secure: process.env.NODE_ENV === 'production', 
-        sameSite: "lax"
+        sameSite: "none"
     });
 
     sendResponse(res, {
